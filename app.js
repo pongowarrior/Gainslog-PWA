@@ -251,24 +251,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    exerciseListEl.addEventListener('click', (e) => {
+        exerciseListEl.addEventListener('click', (e) => {
         // Handle Set Status Click (Completion Circle)
         if (e.target.classList.contains('set-status')) {
             const statusEl = e.target;
             const exerciseId = parseInt(statusEl.dataset.exerciseId);
             const setNumber = parseInt(statusEl.dataset.setNumber);
 
-            // Find the exercise and update the completion status
+            // Find the exercise and set
             const exercise = currentWorkout.exercises.find(e => e.id === exerciseId);
-            if (exercise) {
-                const set = exercise.sets.find(s => s.setNumber === setNumber);
-                if (set) {
-                    set.completed = !set.completed;
-                    statusEl.classList.toggle('completed', set.completed);
+            if (!exercise) return;
+            const set = exercise.sets.find(s => s.setNumber === setNumber);
+            if (!set) return;
+
+            // TOGGLE COMPLETION STATE
+            set.completed = !set.completed;
+            statusEl.classList.toggle('completed', set.completed);
+
+            if (set.completed) {
+                // --- Tap-to-Track Logic ---
+                const setRow = statusEl.closest('.set-row');
+                const weightInput = setRow.querySelector('input[data-field="weight"]');
+                const repsInput = setRow.querySelector('input[data-field="reps"]');
+                const prevSet = exercise.sets.find(s => s.setNumber === setNumber - 1);
+                
+                // 1. Auto-Fill Logic: If inputs are empty, use previous set's values
+                if (!weightInput.value && prevSet) {
+                    weightInput.value = prevSet.weight;
                 }
+                if (!repsInput.value && prevSet) {
+                    repsInput.value = prevSet.reps;
+                }
+
+                // 2. Log Data: Capture the final values into the state object
+                set.weight = weightInput.value;
+                set.reps = repsInput.value;
+                
+                // 3. Auto-Advance: Automatically add a new, empty set row 
+                //    if the user just completed the LAST set in the list.
+                if (set.setNumber === exercise.sets.length) {
+                    addSetToExercise(exercise.id);
+                }
+            } else {
+                // If the set is unchecked, clear the recorded values
+                set.weight = '';
+                set.reps = '';
             }
         }
     });
+
+                
+            
+        
 
 
     // Initial render when the app loads (THIS IS THE FIX)

@@ -152,8 +152,8 @@ h2 {
 }
 
 .set-status {
-    width: 20px;
-    height: 20px;
+    width: 38px;
+    height: 38px;
     border: 2px solid var(--color-text-dim);
     border-radius: 50%;
     cursor: pointer;
@@ -169,3 +169,26 @@ h2 {
 .hidden {
     display: none !important;
 }
+
+/* UX: Large Touch Targets & Visual Feedback */
+.set-row {
+    transition: background-color 0.1s; /* Subtle feedback */
+    cursor: pointer;
+}
+
+.set-row:active {
+    background-color: #404040; /* Darken slightly on tap */
+}
+
+.primary-btn {
+    /* Existing styles here */
+    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 0 var(--color-accent-shadow, #CC2D24); /* 3D effect for better feedback */
+}
+
+.primary-btn:active {
+    background-color: #CC2D24; 
+    transform: translateY(2px); /* Simulate button press */
+    box-shadow: 0 2px 0 var(--color-accent-shadow, #CC2D24); 
+}
+
