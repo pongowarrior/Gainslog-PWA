@@ -18,7 +18,7 @@ let currentWorkout = {
 };
 
 // Global State for saved routines (stored in LocalStorage)
-let routines = JSON.parse(localStorage.getItem('ironlog_routines') || '[]');
+let routines = JSON.parse(localStorage.getItem('gainslog_routines') || '[]');
 let editingRoutineId = null; 
 
 // Global Timer Variables
@@ -76,7 +76,7 @@ function renderCurrentWorkout() {
     exerciseListEl.innerHTML = ''; 
 
     if (currentWorkout.exercises.length === 0) {
-        exerciseListEl.innerHTML = '<p class="placeholder-text">Click "Add New Exercise" to start your session.</p>';
+        exerciseListEl.innerHTML = '<p class="placeholder-text">Click "Add New Exercise" or load a Routine to start your session.</p>';
         finishWorkoutBtn.classList.add('hidden');
         return;
     }
@@ -170,9 +170,9 @@ function finishAndSaveWorkout() {
         return;
     }
 
-    let history = JSON.parse(localStorage.getItem('ironlog_history') || '[]');
+    let history = JSON.parse(localStorage.getItem('gainslog_history') || '[]');
     history.push(currentWorkout);
-    localStorage.setItem('ironlog_history', JSON.stringify(history));
+    localStorage.setItem('gainslog_history', JSON.stringify(history));
 
     currentWorkout = {
         date: new Date().toISOString().slice(0, 10),
@@ -207,7 +207,7 @@ function editExerciseName(exerciseId) {
 
 // 6. Loads and displays saved workouts
 function renderHistory() {
-    const history = JSON.parse(localStorage.getItem('ironlog_history') || '[]');
+    const history = JSON.parse(localStorage.getItem('gainslog_history') || '[]');
     historyContainerEl.innerHTML = '';
     
     if (history.length === 0) {
@@ -293,7 +293,7 @@ function hideRestTimer() {
 // --- ROUTINES MANAGEMENT FUNCTIONS ---
 
 function saveRoutines() {
-    localStorage.setItem('ironlog_routines', JSON.stringify(routines));
+    localStorage.setItem('gainslog_routines', JSON.stringify(routines));
     renderRoutines();
 }
 

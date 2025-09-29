@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ironlog-v1'; 
+const CACHE_NAME = 'gainslog-v3'; // Incrementing cache version to force update
 const urlsToCache = [
     './',
     'index.html',
@@ -32,5 +32,21 @@ self.addEventListener('fetch', event => {
                 // Not in cache - fetch from network
                 return fetch(event.request);
             })
+    );
+});
+
+// Activate event: Deletes old caches (this is key to cleaning up previous versions)
+self.addEventListener('activate', event => {
+    const cacheWhitelist = [CACHE_NAME];
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        return caches.delete(cacheName); // Deletes old caches (v1, v2, etc.)
+                    }
+                })
+            );
+        })
     );
 });
