@@ -1,18 +1,43 @@
+// --- PWA Setup ---
+// Register the Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+            .then(registration => console.log('SW registered: ', registration.scope))
+            .catch(err => console.log('SW registration failed: ', err));
+    });
+}
+
+
+// --- Global State and Element References ---
+
 // Global State Object for the current workout session
 let currentWorkout = {
     date: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
     exercises: []
 };
 
+// Global Timer Variables
+const REST_DURATION = 90; // Default rest time in seconds (1.5 minutes)
+let timerInterval;
+let timeLeft = REST_DURATION;
+
+
 // Element references
 const exerciseListEl = document.getElementById('exercise-list');
 const addExerciseBtn = document.getElementById('add-exercise-btn');
 const finishWorkoutBtn = document.getElementById('finish-workout-btn');
 const historyContainerEl = document.getElementById('workout-history-container');
+const restTimerEl = document.getElementById('rest-timer');
+const timerDisplayEl = document.getElementById('timer-display');
+const skipTimerBtn = document.getElementById('skip-timer-btn');
 
 
-// --- 1. CORE FUNCTION: Adds a New Exercise to the Current Session ---
+// --- CORE WORKOUT FUNCTIONS ---
+
+// 1. Adds a New Exercise to the Current Session
 function addExercise() {
+    // Prompt the user for the exercise name
     const name = prompt("Enter Exercise Name (e.g., Squats, Bench Press):");
     if (!name) return; // User cancelled
 
@@ -33,7 +58,7 @@ function addExercise() {
 }
 
 
-// --- 2. CORE FUNCTION: Generates the HTML for the Current Session ---
+// 2. Generates the HTML for the Current Session
 function renderCurrentWorkout() {
     // Clear existing content
     exerciseListEl.innerHTML = ''; 
@@ -80,7 +105,7 @@ function renderCurrentWorkout() {
 
         // Add New Set Button
         const addSetBtn = document.createElement('button');
-        addSetBtn.className = 'primary-btn';
+        addSetBtn.className = 'secondary-btn'; // Using secondary for this smaller button
         addSetBtn.style.marginTop = '10px';
         addSetBtn.style.padding = '10px';
         addSetBtn.textContent = '+ Add Set';
@@ -92,7 +117,7 @@ function renderCurrentWorkout() {
 }
 
 
-// --- 3. HELPER FUNCTION: Adds a new set to an existing exercise ---
+// 3. Adds a new set to an existing exercise
 function addSetToExercise(exerciseId) {
     const exercise = currentWorkout.exercises.find(e => e.id === exerciseId);
     if (exercise) {
@@ -107,7 +132,7 @@ function addSetToExercise(exerciseId) {
     }
 }
 
-// --- 4. DATA SAVING: Handles saving workout data to LocalStorage ---
+// 4. Handles saving workout data to LocalStorage
 function finishAndSaveWorkout() {
     if (currentWorkout.exercises.length === 0) {
         alert("Cannot save an empty workout!");
@@ -134,7 +159,7 @@ function finishAndSaveWorkout() {
 }
 
 
-// --- 5. HISTORY RENDERING: Loads and displays saved workouts ---
+// 5. Loads and displays saved workouts
 function renderHistory() {
     const history = JSON.parse(localStorage.getItem('ironlog_history') || '[]');
     historyContainerEl.innerHTML = '';
@@ -147,7 +172,7 @@ function renderHistory() {
     // Display history in reverse chronological order
     history.slice().reverse().forEach((workout, index) => {
         const historyCard = document.createElement('div');
-        historyCard.className = 'exercise-card'; // Reuse the card style
+        historyCard.className = 'exercise-card'; 
         
         // Display the date and total exercises
         historyCard.innerHTML = `
@@ -170,7 +195,8 @@ function renderHistory() {
             setList.style.fontSize = '0.9em';
 
             exercise.sets.forEach(set => {
-                if (set.completed && set.weight && set.reps) {
+                // Only show completed sets that have data
+                if (set.completed && set.weight && set.reps) { 
                      setList.innerHTML += `
                         <li>Set ${set.setNumber}: ${set.weight}kg x ${set.reps} reps</li>
                     `;
@@ -186,19 +212,56 @@ function renderHistory() {
 }
 
 
+// --- TIMER FUNCTIONS ---
+
+function startRestTimer() {
+    // 1. Reset timer state
+    clearInterval(timerInterval);
+    timeLeft = REST_DURATION;
+    
+    // 2. Display the timer UI
+    restTimerEl.classList.remove('timer-hidden');
+    
+    // 3. Optional: Vibrate phone to notify user rest has started
+    if ('vibrate' in navigator) {
+        navigator.vibrate(200); 
+    }
+
+    // 4. Start the countdown interval
+    timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerDisplay();
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            // Optional: Vibrate/play sound when rest is finished
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200]);
+            }
+            // Auto-hide after 5 seconds
+            setTimeout(hideRestTimer, 5000); 
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    timerDisplayEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+function hideRestTimer() {
+    clearInterval(timerInterval);
+    restTimerEl.classList.add('timer-hidden');
+    timeLeft = REST_DURATION; // Reset for next use
+    updateTimerDisplay(); // Reset the display to 1:30
+}
+
+
 // --- EVENT LISTENERS AND INITIALIZATION ---
 
 document.addEventListener('DOMContentLoaded', () => {
     
-    // PWA Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(registration => console.log('SW registered: ', registration.scope))
-                .catch(err => console.log('SW registration failed: ', err));
-        });
-    }
-
     // 1. Tab switching 
     const tabs = document.querySelectorAll('.tab-button');
     const views = document.querySelectorAll('.view');
@@ -229,13 +292,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Finish Workout Button
     finishWorkoutBtn.addEventListener('click', finishAndSaveWorkout);
     
-    // 4. Delegated Event Listener for Dynamic Elements (Inputs and Status Circles)
+    // 4. Skip Rest Button
+    skipTimerBtn.addEventListener('click', hideRestTimer);
+    
+    // 5. Delegated Event Listener for Dynamic Elements (Inputs and Status Circles)
     exerciseListEl.addEventListener('change', (e) => {
         // Handle input changes (Weight/Reps)
         if (e.target.tagName === 'INPUT' && e.target.type === 'number') {
             const input = e.target;
             const cardEl = input.closest('.exercise-card');
-            // Find exercise name from the card header
             const exerciseName = cardEl.querySelector('h3').textContent; 
             const setNumber = parseInt(input.getAttribute('data-set-id'));
             const field = input.getAttribute('data-field');
@@ -251,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-        exerciseListEl.addEventListener('click', (e) => {
+    exerciseListEl.addEventListener('click', (e) => {
         // Handle Set Status Click (Completion Circle)
         if (e.target.classList.contains('set-status')) {
             const statusEl = e.target;
@@ -278,12 +343,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 // 1. Auto-Fill Logic: If inputs are empty, use previous set's values
                 if (!weightInput.value && prevSet) {
                     weightInput.value = prevSet.weight;
+                    set.weight = prevSet.weight; // Update state
                 }
                 if (!repsInput.value && prevSet) {
                     repsInput.value = prevSet.reps;
+                    set.reps = prevSet.reps; // Update state
                 }
 
-                // 2. Log Data: Capture the final values into the state object
+                // 2. Log Data: Capture the final values into the state object (in case user entered them)
                 set.weight = weightInput.value;
                 set.reps = repsInput.value;
                 
@@ -292,19 +359,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (set.setNumber === exercise.sets.length) {
                     addSetToExercise(exercise.id);
                 }
+                
+                // 4. Start the Rest Timer after set completion
+                startRestTimer();
+
             } else {
-                // If the set is unchecked, clear the recorded values
+                // If the set is unchecked, clear the recorded values and stop timer
                 set.weight = '';
                 set.reps = '';
+                hideRestTimer(); 
             }
         }
     });
 
-                
-            
-        
 
-
-    // Initial render when the app loads (THIS IS THE FIX)
+    // Initial render when the app loads (THE FIX)
     renderCurrentWorkout();
 });

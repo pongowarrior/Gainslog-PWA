@@ -25,8 +25,13 @@
         <section id="current-workout-view" class="view active">
             <h2>Today's Session</h2>
             
+            <div id="rest-timer" class="timer-hidden">
+                <p>NEXT SET: <span id="timer-display">1:30</span></p>
+                <button id="skip-timer-btn" class="secondary-btn">Skip Rest</button>
+            </div>
             <div id="exercise-list">
-                </div>
+                <p class="placeholder-text">Click "Add New Exercise" to start your session.</p>
+            </div>
 
             <button id="add-exercise-btn" class="primary-btn">Add New Exercise</button>
             <button id="finish-workout-btn" class="primary-btn finish-btn hidden">Finish & Save Workout</button>

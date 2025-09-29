@@ -1,10 +1,9 @@
-/* IRON-LOG: THEME & GLOBAL STYLES */
+/* IRON-LOG: THEME & GLOBAL STYLES (for a high-impact look) */
 
-/* Variables for easy theme changing */
 :root {
     --color-dark-bg: #1A1A1A;     /* Deep Black/Dark Grey */
     --color-medium-bg: #2C2C2C;   /* Secondary Dark Panel */
-    --color-accent: #FF3B30;      /* Aggressive Red/Crimson (Liftin uses red) */
+    --color-accent: #FF3B30;      /* Aggressive Red/Crimson */
     --color-text-light: #F0F0F0;  /* High Contrast White Text */
     --color-text-dim: #999999;    /* Subdued Text */
     --font-family: 'Arial', sans-serif;
@@ -17,7 +16,7 @@ body {
     margin: 0;
     padding: 0;
     line-height: 1.6;
-    touch-action: manipulation; /* Improves responsiveness on touch devices */
+    touch-action: manipulation;
 }
 
 /* Header & Typography */
@@ -47,13 +46,13 @@ h2 {
     color: var(--color-text-light);
 }
 
-/* Main Container and Tabs */
 #app-container {
     padding: 20px;
     max-width: 600px;
     margin: 0 auto;
 }
 
+/* Tabs */
 .tabs {
     display: flex;
     justify-content: space-around;
@@ -82,7 +81,7 @@ h2 {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
-/* Input Fields & Buttons */
+/* Primary Buttons (with 3D press effect) */
 .primary-btn {
     width: 100%;
     padding: 15px;
@@ -93,21 +92,42 @@ h2 {
     font-size: 1.1em;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
+    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
     margin-top: 15px;
+    /* 3D effect for better feedback */
+    box-shadow: 0 4px 0 #CC2D24; 
 }
 
 .primary-btn:active {
-    background-color: darken(var(--color-accent), 10%);
-    transform: scale(0.98);
+    background-color: #CC2D24; 
+    transform: translateY(2px); /* Simulate button press */
+    box-shadow: 0 2px 0 #CC2D24; 
 }
 
-/* Exercise and Set Cards (The visually impressive part) */
+/* Secondary Button (for skipping rest) */
+.secondary-btn {
+    background-color: var(--color-medium-bg);
+    color: var(--color-text-light);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    margin-top: 10px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.secondary-btn:active {
+    background-color: #555;
+}
+
+
+/* Exercise Card Design */
 .exercise-card {
     background-color: var(--color-medium-bg);
     border-radius: 10px;
     padding: 15px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
     border-left: 5px solid var(--color-accent);
 }
@@ -115,63 +135,21 @@ h2 {
 .exercise-card h3 {
     color: var(--color-accent);
     margin-top: 0;
-    margin-bottom: 10px;
-    font-size: 1.2em;
+    margin-bottom: 15px;
+    font-size: 1.4em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .set-row {
     display: flex;
-    gap: 10px;
+    gap: 5px;
     align-items: center;
     background-color: var(--color-dark-bg);
-    padding: 8px;
+    padding: 10px;
     border-radius: 6px;
     margin-bottom: 8px;
-}
-
-.set-row label {
-    flex-basis: 30%;
-    font-weight: bold;
-    color: var(--color-text-dim);
-}
-
-.set-row input {
-    flex-grow: 1;
-    padding: 8px;
-    border: 1px solid var(--color-medium-bg);
-    border-radius: 4px;
-    background-color: var(--color-dark-bg);
-    color: var(--color-text-light);
-    font-size: 1em;
-    text-align: center;
-}
-
-.set-row input:focus {
-    outline: none;
-    border-color: var(--color-accent);
-}
-
-.set-status {
-    width: 38px;
-    height: 38px;
-    border: 2px solid var(--color-text-dim);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-
-.set-status.completed {
-    background-color: #2ECC71; /* Green for completion */
-    border-color: #2ECC71;
-}
-
-/* Utility Classes */
-.hidden {
-    display: none !important;
-}
-
-/* UX: Large Touch Targets & Visual Feedback */
-.set-row {
     transition: background-color 0.1s; /* Subtle feedback */
     cursor: pointer;
 }
@@ -180,15 +158,97 @@ h2 {
     background-color: #404040; /* Darken slightly on tap */
 }
 
-.primary-btn {
-    /* Existing styles here */
-    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
-    box-shadow: 0 4px 0 var(--color-accent-shadow, #CC2D24); /* 3D effect for better feedback */
+.set-row .set-number {
+    flex-basis: 15%;
+    font-weight: bold;
+    color: var(--color-accent);
+    text-align: center;
 }
 
-.primary-btn:active {
-    background-color: #CC2D24; 
-    transform: translateY(2px); /* Simulate button press */
-    box-shadow: 0 2px 0 var(--color-accent-shadow, #CC2D24); 
+.set-row input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid var(--color-medium-bg);
+    border-radius: 4px;
+    background-color: #383838;
+    color: var(--color-text-light);
+    font-size: 1em;
+    text-align: center;
+    max-width: 25%;
 }
 
+.set-row input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.set-row .input-label {
+    color: var(--color-text-dim);
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+/* SET COMPLETION CIRCLE (Larger Touch Target) */
+.set-status {
+    width: 38px; /* New size - MUCH LARGER TARGET */
+    height: 38px; /* New size - MUCH LARGER TARGET */
+    border: 2px solid var(--color-text-dim);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+}
+
+.set-status.completed {
+    background-color: #2ECC71; /* Green for completion */
+    border-color: #2ECC71;
+}
+
+/* TIMER STYLES */
+#rest-timer {
+    background-color: var(--color-accent); 
+    color: var(--color-dark-bg);
+    padding: 15px 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease-in-out;
+}
+
+#rest-timer p {
+    margin: 0;
+    font-size: 1.2em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#timer-display {
+    font-size: 2.5em; 
+    margin-left: 10px;
+    color: var(--color-dark-bg); 
+    line-height: 1;
+}
+
+.timer-hidden {
+    /* Hides the timer by collapsing it completely */
+    max-height: 0;
+    padding: 0 20px; 
+    overflow: hidden;
+    margin-bottom: 0;
+}
+
+
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+.placeholder-text {
+    color: var(--color-text-dim);
+    text-align: center;
+    padding: 40px 0;
+    font-style: italic;
+}
