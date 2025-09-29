@@ -1,12 +1,12 @@
 /* IRON-LOG: PROFESSIONAL UI REDESIGN */
 
 :root {
-    --color-dark-bg: #1A1A1A;
-    --color-medium-bg: #2C2C2C;
-    --color-accent: #FF3B30;
-    --color-text-light: #F0F0F0;
-    --color-text-dim: #999999;
-    --color-success: #2ECC71;
+    --color-dark-bg: #1A1A1A;     /* Deep Black/Dark Grey */
+    --color-medium-bg: #2C2C2C;   /* Secondary Dark Panel */
+    --color-accent: #FF3B30;      /* Aggressive Red/Crimson */
+    --color-text-light: #F0F0F0;  /* High Contrast White Text */
+    --color-text-dim: #999999;    /* Subdued Text */
+    --color-success: #2ECC71;     /* Green for completion/success */
     --font-family: 'Arial', sans-serif;
 }
 
@@ -50,7 +50,7 @@ h2 {
 }
 
 #app-container {
-    padding: 15px; /* Reduced padding for more screen space */
+    padding: 15px; 
     max-width: 600px;
     margin: 0 auto;
 }
@@ -84,7 +84,7 @@ h2 {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
-/* Buttons */
+/* Primary Buttons (with 3D press effect) */
 .primary-btn {
     width: 100%;
     padding: 15px;
@@ -106,6 +106,7 @@ h2 {
     box-shadow: 0 2px 0 #CC2D24; 
 }
 
+/* Secondary Button (Skip Rest / Small Action) */
 .secondary-btn {
     background-color: var(--color-medium-bg);
     color: var(--color-text-light);
@@ -143,10 +144,10 @@ h2 {
     align-items: center;
 }
 
-/* SET ROW FIX: Uses Flexbox to wrap elements */
+/* Set Row Layout (Responsive) */
 .set-row {
     display: flex;
-    justify-content: space-between; /* Spread elements out */
+    justify-content: space-between; 
     align-items: center;
     background-color: var(--color-dark-bg);
     padding: 10px;
@@ -164,20 +165,20 @@ h2 {
     font-weight: bold;
     color: var(--color-accent);
     text-align: center;
-    flex-basis: 15%; /* Keep set number small */
+    flex-basis: 15%; 
 }
 
-/* INPUT GROUP FIX: Group inputs to prevent overflow */
+/* Input Group: Stacked label and input */
 .input-group {
     display: flex;
-    flex-direction: column; /* Stack label and input for better touch targeting */
+    flex-direction: column; 
     align-items: center;
     flex-grow: 1; 
-    max-width: 35%; /* Control input group width */
+    max-width: 35%; 
 }
 
 .set-row input {
-    width: 100%; /* Take full width of the group */
+    width: 100%; 
     padding: 8px;
     border: 1px solid var(--color-medium-bg);
     border-radius: 4px;
@@ -185,7 +186,7 @@ h2 {
     color: var(--color-text-light);
     font-size: 1em;
     text-align: center;
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    box-sizing: border-box;
 }
 
 .set-row input:focus {
@@ -196,7 +197,7 @@ h2 {
 .set-row .input-label {
     color: var(--color-text-dim);
     font-size: 0.8em;
-    margin-bottom: 4px; /* Space between label and input */
+    margin-bottom: 4px;
     text-transform: uppercase;
 }
 
@@ -252,17 +253,6 @@ h2 {
 }
 
 
-/* Utility */
-.hidden {
-    display: none !important;
-}
-
-.placeholder-text {
-    color: var(--color-text-dim);
-    text-align: center;
-    padding: 40px 0;
-    font-style: italic;
-    
 /* Exercise Management Styles */
 .management-btn {
     background: transparent;
@@ -292,16 +282,65 @@ h2 {
     transition: background-color 0.1s;
 }
 
-.management-menu button:hover {
-    background-color: #3e3e3e;
-}
-
 .management-menu .delete-btn {
-    background-color: #A03030; /* Darker red for delete action */
+    background-color: #A03030; 
     border-color: #A03030;
     color: var(--color-text-light);
 }
 
-.management-menu .delete-btn:hover {
-    background-color: var(--color-accent);
+/* ROUTINE EDITOR MODAL STYLES */
+#routine-editor-view {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--color-dark-bg);
+    z-index: 200; 
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+#routine-editor-view h2 {
+    margin-top: 0;
+    flex-grow: 1;
+    border-bottom: none;
+}
+
+.routine-template-exercise {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--color-medium-bg);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.routine-template-exercise span {
+    font-weight: bold;
+    color: var(--color-text-light);
+    flex-grow: 1;
+}
+
+
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+.placeholder-text {
+    color: var(--color-text-dim);
+    text-align: center;
+    padding: 40px 0;
+    font-style: italic;
 }

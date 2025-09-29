@@ -18,6 +18,7 @@
         
         <nav class="tabs">
             <button class="tab-button active" data-view="current">Current Workout</button>
+            <button class="tab-button" data-view="routines">Routines</button>
             <button class="tab-button" data-view="history">History</button>
             <button class="tab-button" data-view="settings">Settings</button>
         </nav>
@@ -29,6 +30,7 @@
                 <p>NEXT SET: <span id="timer-display">1:30</span></p>
                 <button id="skip-timer-btn" class="secondary-btn">Skip Rest</button>
             </div>
+            
             <div id="exercise-list">
                 <p class="placeholder-text">Click "Add New Exercise" to start your session.</p>
             </div>
@@ -36,6 +38,15 @@
             <button id="add-exercise-btn" class="primary-btn">Add New Exercise</button>
             <button id="finish-workout-btn" class="primary-btn finish-btn hidden">Finish & Save Workout</button>
         </section>
+        
+        <section id="routines-view" class="view hidden">
+            <h2>Your Programs</h2>
+            <div id="routines-list-container">
+                <p class="placeholder-text">Define recurring workouts here (e.g., Push, Pull, Legs).</p>
+            </div>
+            <button id="add-routine-btn" class="primary-btn">Create New Routine</button>
+        </section>
+
 
         <section id="history-view" class="view hidden">
             <h2>Workout History</h2>
@@ -47,6 +58,20 @@
         <section id="settings-view" class="view hidden">
             <h2>App Settings</h2>
             <p class="placeholder-text">Future settings will allow you to manage units (kg/lbs) and data.</p>
+        </section>
+        
+        <section id="routine-editor-view" class="view hidden">
+            <div class="editor-header">
+                <h2 id="routine-editor-title">Editing Routine: </h2>
+                <button id="close-editor-btn" class="secondary-btn">Done</button>
+            </div>
+            
+            <p style="color:var(--color-text-dim); margin-bottom: 15px;">Add/remove exercises for this program template.</p>
+
+            <div id="routine-editor-list">
+                </div>
+            
+            <button id="add-exercise-to-routine-btn" class="primary-btn" style="margin-top: 25px;">+ Add Exercise to Template</button>
         </section>
 
     </main>
