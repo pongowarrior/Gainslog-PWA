@@ -72,7 +72,18 @@ function renderCurrentWorkout() {
     currentWorkout.exercises.forEach(exercise => {
         const card = document.createElement('div');
         card.className = 'exercise-card';
-        card.innerHTML = `<h3>${exercise.name}</h3>`;
+                // Include a menu button for management
+        card.innerHTML = `
+            <h3>
+                ${exercise.name}
+                <button class="management-btn" data-exercise-id="${exercise.id}">⋮</button>
+            </h3>
+            <div id="menu-${exercise.id}" class="management-menu hidden">
+                <button onclick="editExerciseName(${exercise.id})">Edit Name</button>
+                <button class="delete-btn" onclick="deleteExercise(${exercise.id})">Delete Exercise</button>
+            </div>
+        `;
+
         
         exercise.sets.forEach(set => {
             const setRow = document.createElement('div');
@@ -315,8 +326,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const set = exercise.sets.find(s => s.setNumber === setNumber);
                 if (set) {
                     set[field] = input.value;
-                }
-            }
+        // 6. Delegated Event Listener for Management Menu
+    exerciseListEl.addEventListener('click', (e) => {
+        if (e.target.classList.contains('management-btn')) {
+            const exerciseId = e.target.dataset.exerciseId;
+            const menuEl = document.getElementById(`menu-${exerciseId}`);
+            menuEl.classList.toggle('hidden');
         }
     });
     
@@ -363,6 +378,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (set.setNumber === exercise.sets.length) {
                     addSetToExercise(exercise.id);
                 }
+                // --- EXERCISE MANAGEMENT FUNCTIONS ---
+
+function deleteExercise(exerciseId) {
+    if (confirm("Are you sure you want to delete this exercise and all its sets?")) {
+        currentWorkout.exercises = currentWorkout.exercises.filter(e => e.id !== exerciseId);
+        renderCurrentWorkout();
+    }
+}
+
+function editExerciseName(exerciseId) {
+    const exercise = currentWorkout.exercises.find(e => e.id === exerciseId);
+    if (exercise) {
+        const newName = prompt("Edit Exercise Name:", exercise.name);
+        if (newName && newName.trim() !== "") {
+            exercise.name = newName.trim();
+            renderCurrentWorkout();
+        }
+    }
+}
+
                 
                 // 4. Start the Rest Timer after set completion
                 startRestTimer();

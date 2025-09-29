@@ -262,4 +262,46 @@ h2 {
     text-align: center;
     padding: 40px 0;
     font-style: italic;
+    
+/* Exercise Management Styles */
+.management-btn {
+    background: transparent;
+    color: var(--color-text-dim);
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.management-menu {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--color-dark-bg);
+}
+
+.management-menu button {
+    background-color: var(--color-medium-bg);
+    color: var(--color-text-light);
+    border: 1px solid var(--color-text-dim);
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.management-menu button:hover {
+    background-color: #3e3e3e;
+}
+
+.management-menu .delete-btn {
+    background-color: #A03030; /* Darker red for delete action */
+    border-color: #A03030;
+    color: var(--color-text-light);
+}
+
+.management-menu .delete-btn:hover {
+    background-color: var(--color-accent);
 }
