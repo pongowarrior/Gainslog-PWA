@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRON-LOG Workout Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png"> 
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>IRON-LOG</h1>
+    </header>
+
+    <main id="app-container">
+        
+        <nav class="tabs">
+            <button class="tab-button active" data-view="current">Current Workout</button>
+            <button class="tab-button" data-view="history">History</button>
+            <button class="tab-button" data-view="settings">Settings</button>
+        </nav>
+
+        <section id="current-workout-view" class="view active">
+            <h2>Today's Session</h2>
+            
+            <div id="exercise-list">
+                </div>
+
+            <button id="add-exercise-btn" class="primary-btn">Add New Exercise</button>
+            <button id="finish-workout-btn" class="primary-btn finish-btn hidden">Finish & Save Workout</button>
+        </section>
+
+        <section id="history-view" class="view hidden">
+            <h2>Workout History</h2>
+            <div id="workout-history-container">
+                <p class="placeholder-text">Workout history will appear here once saved.</p>
+            </div>
+        </section>
+
+        <section id="settings-view" class="view hidden">
+            <h2>App Settings</h2>
+            <p class="placeholder-text">Future settings will allow you to manage units (kg/lbs) and data.</p>
+        </section>
+
+    </main>
+
+    <script src="app.js"></script>
+    <script src="service-worker.js"></script>
+</body>
+</html>

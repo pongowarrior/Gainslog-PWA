@@ -1,0 +1,171 @@
+/* IRON-LOG: THEME & GLOBAL STYLES */
+
+/* Variables for easy theme changing */
+:root {
+    --color-dark-bg: #1A1A1A;     /* Deep Black/Dark Grey */
+    --color-medium-bg: #2C2C2C;   /* Secondary Dark Panel */
+    --color-accent: #FF3B30;      /* Aggressive Red/Crimson (Liftin uses red) */
+    --color-text-light: #F0F0F0;  /* High Contrast White Text */
+    --color-text-dim: #999999;    /* Subdued Text */
+    --font-family: 'Arial', sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--color-dark-bg);
+    color: var(--color-text-light);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    touch-action: manipulation; /* Improves responsiveness on touch devices */
+}
+
+/* Header & Typography */
+header {
+    background-color: var(--color-medium-bg);
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2.2em;
+    color: var(--color-accent);
+    letter-spacing: 2px;
+}
+
+h2 {
+    font-size: 1.5em;
+    border-bottom: 2px solid var(--color-accent);
+    padding-bottom: 5px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    color: var(--color-text-light);
+}
+
+/* Main Container and Tabs */
+#app-container {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.tabs {
+    display: flex;
+    justify-content: space-around;
+    background-color: var(--color-medium-bg);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    padding: 5px;
+}
+
+.tab-button {
+    flex-grow: 1;
+    padding: 12px 0;
+    border: none;
+    background: transparent;
+    color: var(--color-text-dim);
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 6px;
+}
+
+.tab-button.active {
+    background-color: var(--color-accent);
+    color: var(--color-text-light);
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* Input Fields & Buttons */
+.primary-btn {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--color-accent);
+    color: var(--color-text-light);
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    margin-top: 15px;
+}
+
+.primary-btn:active {
+    background-color: darken(var(--color-accent), 10%);
+    transform: scale(0.98);
+}
+
+/* Exercise and Set Cards (The visually impressive part) */
+.exercise-card {
+    background-color: var(--color-medium-bg);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    border-left: 5px solid var(--color-accent);
+}
+
+.exercise-card h3 {
+    color: var(--color-accent);
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.set-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background-color: var(--color-dark-bg);
+    padding: 8px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.set-row label {
+    flex-basis: 30%;
+    font-weight: bold;
+    color: var(--color-text-dim);
+}
+
+.set-row input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid var(--color-medium-bg);
+    border-radius: 4px;
+    background-color: var(--color-dark-bg);
+    color: var(--color-text-light);
+    font-size: 1em;
+    text-align: center;
+}
+
+.set-row input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.set-status {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-text-dim);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.set-status.completed {
+    background-color: #2ECC71; /* Green for completion */
+    border-color: #2ECC71;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
