@@ -78,22 +78,26 @@ function renderCurrentWorkout() {
             const setRow = document.createElement('div');
             setRow.className = 'set-row';
             
-            // Set Number
+            // 1. Set Number (15% width)
             setRow.innerHTML += `<span class="set-number">${set.setNumber}</span>`;
             
-            // Weight Input
+            // 2. Weight Input Group (35% width) - Uses new mobile-friendly structure
             setRow.innerHTML += `
-                <input type="number" data-set-id="${set.setNumber}" data-field="weight" 
-                       value="${set.weight}" placeholder="Weight" inputmode="decimal">
-                <span class="input-label">kg</span>`;
+                <div class="input-group">
+                    <span class="input-label">Weight (kg)</span>
+                    <input type="number" data-set-id="${set.setNumber}" data-field="weight" 
+                           value="${set.weight}" placeholder="100" inputmode="decimal">
+                </div>`;
             
-            // Reps Input
+            // 3. Reps Input Group (35% width) - Uses new mobile-friendly structure
             setRow.innerHTML += `
-                <input type="number" data-set-id="${set.setNumber}" data-field="reps" 
-                       value="${set.reps}" placeholder="Reps" inputmode="numeric">
-                <span class="input-label">reps</span>`;
-
-            // Completion Circle
+                <div class="input-group">
+                    <span class="input-label">Reps</span>
+                    <input type="number" data-set-id="${set.setNumber}" data-field="reps" 
+                           value="${set.reps}" placeholder="10" inputmode="numeric">
+                </div>`;
+            
+            // 4. Completion Circle (15% width)
             const statusEl = document.createElement('div');
             statusEl.className = set.completed ? 'set-status completed' : 'set-status';
             statusEl.dataset.exerciseId = exercise.id;
@@ -105,7 +109,7 @@ function renderCurrentWorkout() {
 
         // Add New Set Button
         const addSetBtn = document.createElement('button');
-        addSetBtn.className = 'secondary-btn'; // Using secondary for this smaller button
+        addSetBtn.className = 'secondary-btn'; 
         addSetBtn.style.marginTop = '10px';
         addSetBtn.style.padding = '10px';
         addSetBtn.textContent = '+ Add Set';
@@ -373,6 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // Initial render when the app loads (THE FIX)
+    // Initial render when the app loads (THE CRITICAL FIX for buttons)
     renderCurrentWorkout();
 });

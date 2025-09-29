@@ -1,11 +1,12 @@
-/* IRON-LOG: THEME & GLOBAL STYLES (for a high-impact look) */
+/* IRON-LOG: PROFESSIONAL UI REDESIGN */
 
 :root {
-    --color-dark-bg: #1A1A1A;     /* Deep Black/Dark Grey */
-    --color-medium-bg: #2C2C2C;   /* Secondary Dark Panel */
-    --color-accent: #FF3B30;      /* Aggressive Red/Crimson */
-    --color-text-light: #F0F0F0;  /* High Contrast White Text */
-    --color-text-dim: #999999;    /* Subdued Text */
+    --color-dark-bg: #1A1A1A;
+    --color-medium-bg: #2C2C2C;
+    --color-accent: #FF3B30;
+    --color-text-light: #F0F0F0;
+    --color-text-dim: #999999;
+    --color-success: #2ECC71;
     --font-family: 'Arial', sans-serif;
 }
 
@@ -17,6 +18,8 @@ body {
     padding: 0;
     line-height: 1.6;
     touch-action: manipulation;
+    /* Prevents horizontal scrolling */
+    overflow-x: hidden; 
 }
 
 /* Header & Typography */
@@ -47,7 +50,7 @@ h2 {
 }
 
 #app-container {
-    padding: 20px;
+    padding: 15px; /* Reduced padding for more screen space */
     max-width: 600px;
     margin: 0 auto;
 }
@@ -81,7 +84,7 @@ h2 {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
-/* Primary Buttons (with 3D press effect) */
+/* Buttons */
 .primary-btn {
     width: 100%;
     padding: 15px;
@@ -94,17 +97,15 @@ h2 {
     cursor: pointer;
     transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
     margin-top: 15px;
-    /* 3D effect for better feedback */
     box-shadow: 0 4px 0 #CC2D24; 
 }
 
 .primary-btn:active {
     background-color: #CC2D24; 
-    transform: translateY(2px); /* Simulate button press */
+    transform: translateY(2px);
     box-shadow: 0 2px 0 #CC2D24; 
 }
 
-/* Secondary Button (for skipping rest) */
 .secondary-btn {
     background-color: var(--color-medium-bg);
     color: var(--color-text-light);
@@ -142,31 +143,41 @@ h2 {
     align-items: center;
 }
 
+/* SET ROW FIX: Uses Flexbox to wrap elements */
 .set-row {
     display: flex;
-    gap: 5px;
+    justify-content: space-between; /* Spread elements out */
     align-items: center;
     background-color: var(--color-dark-bg);
     padding: 10px;
     border-radius: 6px;
     margin-bottom: 8px;
-    transition: background-color 0.1s; /* Subtle feedback */
+    transition: background-color 0.1s;
     cursor: pointer;
 }
 
 .set-row:active {
-    background-color: #404040; /* Darken slightly on tap */
+    background-color: #404040;
 }
 
 .set-row .set-number {
-    flex-basis: 15%;
     font-weight: bold;
     color: var(--color-accent);
     text-align: center;
+    flex-basis: 15%; /* Keep set number small */
+}
+
+/* INPUT GROUP FIX: Group inputs to prevent overflow */
+.input-group {
+    display: flex;
+    flex-direction: column; /* Stack label and input for better touch targeting */
+    align-items: center;
+    flex-grow: 1; 
+    max-width: 35%; /* Control input group width */
 }
 
 .set-row input {
-    flex-grow: 1;
+    width: 100%; /* Take full width of the group */
     padding: 8px;
     border: 1px solid var(--color-medium-bg);
     border-radius: 4px;
@@ -174,7 +185,7 @@ h2 {
     color: var(--color-text-light);
     font-size: 1em;
     text-align: center;
-    max-width: 25%;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
 .set-row input:focus {
@@ -185,13 +196,14 @@ h2 {
 .set-row .input-label {
     color: var(--color-text-dim);
     font-size: 0.8em;
-    margin-left: 5px;
+    margin-bottom: 4px; /* Space between label and input */
+    text-transform: uppercase;
 }
 
-/* SET COMPLETION CIRCLE (Larger Touch Target) */
+/* SET COMPLETION CIRCLE (Large Target) */
 .set-status {
-    width: 38px; /* New size - MUCH LARGER TARGET */
-    height: 38px; /* New size - MUCH LARGER TARGET */
+    width: 38px;
+    height: 38px;
     border: 2px solid var(--color-text-dim);
     border-radius: 50%;
     cursor: pointer;
@@ -200,8 +212,8 @@ h2 {
 }
 
 .set-status.completed {
-    background-color: #2ECC71; /* Green for completion */
-    border-color: #2ECC71;
+    background-color: var(--color-success);
+    border-color: var(--color-success);
 }
 
 /* TIMER STYLES */
@@ -233,7 +245,6 @@ h2 {
 }
 
 .timer-hidden {
-    /* Hides the timer by collapsing it completely */
     max-height: 0;
     padding: 0 20px; 
     overflow: hidden;
