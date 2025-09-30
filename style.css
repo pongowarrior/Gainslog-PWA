@@ -245,11 +245,9 @@ h2 {
     line-height: 1;
 }
 
+/* FIX: Use display: none for complete hiding */
 .timer-hidden {
-    max-height: 0;
-    padding: 0 20px; 
-    overflow: hidden;
-    margin-bottom: 0;
+    display: none !important;
 }
 
 

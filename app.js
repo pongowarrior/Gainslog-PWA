@@ -271,7 +271,8 @@ function startRestTimer() {
             if ('vibrate' in navigator) {
                 navigator.vibrate([200, 100, 200]);
             }
-            setTimeout(hideRestTimer, 5000); 
+            // FIX: Hide timer immediately when rest is over
+            hideRestTimer(); 
         }
     }, 1000);
 }
@@ -460,6 +461,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 } 
                 if (tab.getAttribute('data-view') === 'routines') {
                     renderRoutines();
+                }
+                // FIX: Force re-render of the Current Workout view when returning to it
+                if (tab.getAttribute('data-view') === 'current') {
+                    renderCurrentWorkout(); 
                 }
             }
         });
