@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gainslog-v4'; // ⚠️ INCREMENTED CACHE VERSION (v4)
+const CACHE_NAME = 'gainslog-v4'; 
 const CORE_ASSETS = [
     './',
     'index.html',
@@ -11,7 +11,6 @@ const CORE_ASSETS = [
 
 // 1. Install Event: Caches all CORE_ASSETS
 self.addEventListener('install', event => {
-    // Force the waiting service worker to become the active service worker
     self.skipWaiting(); 
     console.log('[Service Worker] Install');
     event.waitUntil(
@@ -31,15 +30,13 @@ self.addEventListener('activate', event => {
     console.log('[Service Worker] Activate');
     const cacheWhitelist = [CACHE_NAME];
     event.waitUntil(
-        // Claim clients immediately to control pages
         self.clients.claim().then(() => { 
             return caches.keys().then(cacheNames => {
                 return Promise.all(
                     cacheNames.map(cacheName => {
-                        // Check if the current cacheName is NOT in the whitelist
                         if (!cacheWhitelist.includes(cacheName)) {
                             console.log(`[Service Worker] Deleting old cache: ${cacheName}`);
-                            return caches.delete(cacheName); // Deletes old caches
+                            return caches.delete(cacheName); 
                         }
                     })
                 );
@@ -48,9 +45,49 @@ self.addEventListener('activate', event => {
     );
 });
 
-// 3. Fetch Event: Main Request Routing Logic
+// 3. Message Event: Handles the 'clear_data' message from the app
+self.addEventListener('message', event => {
+    if (event.data && event.data.action === 'clear_data') {
+        console.log('[Service Worker] Received clear_data message. Clearing all storage...');
+        
+        // Use event.waitUntil to keep the service worker alive until cleanup is done
+        event.waitUntil(
+            Promise.all([
+                // 1. Delete all file caches
+                caches.keys().then(cacheNames => {
+                    return Promise.all(
+                        cacheNames.map(cacheName => caches.delete(cacheName))
+                    );
+                }),
+                
+                // 2. Delete the IndexedDB database
+                new Promise((resolve, reject) => {
+                    const deleteRequest = indexedDB.deleteDatabase('GainsLogDB');
+                    deleteRequest.onsuccess = () => {
+                        console.log('[Service Worker] IndexedDB deleted.');
+                        resolve();
+                    };
+                    deleteRequest.onerror = (err) => {
+                        console.error('[Service Worker] Failed to delete IndexedDB:', err);
+                        reject(err);
+                    };
+                })
+            ])
+            .then(() => {
+                // Let the app know the data cleanup is done
+                event.source.postMessage({ action: 'data_cleared' });
+            })
+            .catch(error => {
+                console.error('[Service Worker] Global clear failed:', error);
+                event.source.postMessage({ action: 'clear_failed' });
+            })
+        );
+    }
+});
+
+
+// 4. Fetch Event: Main Request Routing Logic
 self.addEventListener('fetch', event => {
-    // Only handle GET requests and ignore chrome-extensions, etc.
     if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
         return;
     }
@@ -58,39 +95,27 @@ self.addEventListener('fetch', event => {
     event.respondWith(
         caches.match(event.request)
             .then(cachedResponse => {
-                // Check if the request is for one of the CORE_ASSETS
                 if (cachedResponse) {
-                    console.log(`[Service Worker] Cache Hit for: ${event.request.url}`);
-                    return cachedResponse; // Strategy: Cache-First (for CORE_ASSETS)
+                    return cachedResponse; 
                 }
 
-                // If not in the pre-cache, proceed to fetch from the network
                 return fetch(event.request)
                     .then(networkResponse => {
-                        // ⚠️ Check if we received a valid response (200, but not opaque, not an error)
                         if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
                             return networkResponse;
                         }
 
-                        // Strategy: Network-First with Dynamic Caching (for other assets/APIs)
-                        // Clone the response because it's a stream and can only be consumed once
                         const responseToCache = networkResponse.clone();
                         
-                        // Dynamically cache the new successful response for future use
                         caches.open(CACHE_NAME)
                             .then(cache => {
-                                console.log(`[Service Worker] Dynamic Caching: ${event.request.url}`);
                                 cache.put(event.request, responseToCache);
                             });
 
                         return networkResponse;
                     })
                     .catch(error => {
-                        // This catch block handles network failure (e.g., offline)
-                        console.error(`[Service Worker] Fetch failed for: ${event.request.url}`, error);
-                        // Optional: Return a specific offline page/image if needed
-                        // return caches.match('offline.html'); 
-                        // For now, let it fall through or return a generic offline response.
+                        // Network failed, nothing to do here as it wasn't a core asset
                     });
             })
     );

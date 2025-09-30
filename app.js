@@ -1,3 +1,142 @@
+// --- IndexedDB Helper Class ---
+// This class manages persistence for Workout History and PRs
+class GainsLogDB {
+    constructor(dbName = 'GainsLogDB', version = 1) {
+        this.dbName = dbName;
+        this.version = version;
+        this.db = null;
+        this.STORE_HISTORY = 'workoutHistory'; // Store for completed workouts
+        this.STORE_PRS = 'personalRecords';   // Store for PRs (Key-Value)
+    }
+
+    // 1. Initialise and open the database connection
+    openDB() {
+        return new Promise((resolve, reject) => {
+            if (!('indexedDB' in window)) {
+                reject('IndexedDB is not supported by your browser.');
+                return;
+            }
+
+            const request = indexedDB.open(this.dbName, this.version);
+
+            request.onupgradeneeded = (event) => {
+                this.db = event.target.result;
+                
+                // Create workoutHistory store
+                if (!this.db.objectStoreNames.contains(this.STORE_HISTORY)) {
+                    // keyPath: 'id' is required, autoIncrement handles unique IDs
+                    this.db.createObjectStore(this.STORE_HISTORY, { keyPath: 'id', autoIncrement: true });
+                }
+                
+                // Create personalRecords store (using 'name' as key path)
+                if (!this.db.objectStoreNames.contains(this.STORE_PRS)) {
+                    this.db.createObjectStore(this.STORE_PRS, { keyPath: 'name' });
+                }
+                console.log(`[IndexedDB] Database setup complete for version ${this.version}.`);
+            };
+
+            request.onsuccess = (event) => {
+                this.db = event.target.result;
+                resolve(this.db);
+                console.log('[IndexedDB] Database connection successful.');
+            };
+
+            request.onerror = (event) => {
+                reject(`[IndexedDB] Database error: ${event.target.errorCode}`);
+            };
+        });
+    }
+
+    // Helper to get a transaction object
+    getTransaction(storeName, mode = 'readonly') {
+        if (!this.db) {
+            throw new Error('Database is not open. Call openDB() first.');
+        }
+        return this.db.transaction(storeName, mode).objectStore(storeName);
+    }
+
+    // --- WORKOUT HISTORY METHODS ---
+
+    addWorkout(workout) {
+        return new Promise((resolve, reject) => {
+            const store = this.getTransaction(this.STORE_HISTORY, 'readwrite');
+            
+            // Crucial fix: Remove the ID property to ensure IndexedDB's autoIncrement generates a new one
+            delete workout.id; 
+
+            const request = store.add(workout); 
+
+            request.onsuccess = (event) => {
+                workout.id = event.target.result; // Update the session object with the new ID
+                resolve(workout.id);
+            };
+            request.onerror = (event) => reject(`Error adding workout: ${event.target.error}`);
+        });
+    }
+
+    getAllWorkouts() {
+        return new Promise((resolve, reject) => {
+            const store = this.getTransaction(this.STORE_HISTORY, 'readonly');
+            const request = store.getAll();
+
+            request.onsuccess = (event) => resolve(event.target.result);
+            request.onerror = (event) => reject(`Error getting all workouts: ${event.target.error}`);
+        });
+    }
+
+    // --- PR METHODS ---
+    
+    // Saves a single PR (uses 'name' as the key to overwrite existing PRs for that exercise)
+    savePR(pr) {
+         return new Promise((resolve, reject) => {
+            const store = this.getTransaction(this.STORE_PRS, 'readwrite');
+            const request = store.put(pr); // use put for save/update
+
+            request.onsuccess = (event) => resolve(event.target.result);
+            request.onerror = (event) => reject(`Error saving PR: ${event.target.error}`);
+        });
+    }
+    
+    getAllPRs() {
+        return new Promise((resolve, reject) => {
+            const store = this.getTransaction(this.STORE_PRS, 'readonly');
+            const request = store.getAll();
+
+            request.onsuccess = (event) => resolve(event.target.result);
+            request.onerror = (event) => reject(`Error getting all PRs: ${event.target.error}`);
+        });
+    }
+
+    // --- FIX: CLEAR DATA METHOD (for direct access and Service Worker fallback) ---
+    clearAllData() {
+        return new Promise((resolve, reject) => {
+            if (!this.db) {
+                reject(new Error('Database is not open. Cannot clear data.'));
+                return;
+            }
+            try {
+                // Begin a transaction that covers both stores
+                const transaction = this.db.transaction([this.STORE_HISTORY, this.STORE_PRS], 'readwrite');
+
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = (event) => reject(`Error clearing data: ${event.target.error}`);
+
+                // Clear each store
+                transaction.objectStore(this.STORE_HISTORY).clear();
+                transaction.objectStore(this.STORE_PRS).clear();
+                
+            } catch(e) {
+                reject(e);
+            }
+        });
+    }
+}
+
+
+// --- GLOBAL INSTANCES ---
+const dbHelper = new GainsLogDB();
+
+
 // --- PWA Setup ---
 // Register the Service Worker
 if ('serviceWorker' in navigator) {
@@ -13,27 +152,29 @@ if ('serviceWorker' in navigator) {
 
 // Global State for the current workout session
 let currentWorkout = {
+    // Unique ID for the session, will be assigned by IndexedDB on save
+    id: null, 
     date: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
     exercises: []
 };
 
 // Global State for saved routines and PRs
+// Routines remain in localStorage for simplicity
 let routines = JSON.parse(localStorage.getItem('gainslog_routines') || '[]');
-let personalRecords = JSON.parse(localStorage.getItem('gainslog_prs') || '{}'); 
+// PRs are now loaded from IndexedDB, but we keep a local object for comparison
+let personalRecords = {}; 
 let editingRoutineId = null; 
 
 // Global Timer Variables
-const DEFAULT_REST_DURATION = 90; // Fallback rest time in seconds (1.5 minutes)
-// Load user preference, defaulting to 90 seconds if not set
+const DEFAULT_REST_DURATION = 90; 
 let userRestDuration = parseInt(localStorage.getItem('gainslog_rest_duration')) || DEFAULT_REST_DURATION; 
-
 let timerInterval;
 let timeLeft = userRestDuration; 
 
 // SWIPE/NAVIGATION STATE
-let currentTabIndex = 0; // 0: Training, 1: Progress, 2: Routines, 3: Profile
+let currentTabIndex = 0; 
 let startX = 0;
-const SWIPE_THRESHOLD = 50; // Minimum pixel distance for a successful swipe
+const SWIPE_THRESHOLD = 50; 
 
 
 // Element references (Current Workout View)
@@ -66,18 +207,13 @@ const tabButtons = document.querySelectorAll('.tab-button');
 // --- SWIPE AND NAVIGATION FUNCTIONS ---
 
 function switchPage(index) {
-    // Hide the editor modal before switching tabs
     routineEditorView.classList.add('hidden'); 
-
-    // Ensure index is within bounds (0 to 3)
     index = Math.max(0, Math.min(3, index));
     currentTabIndex = index;
     
-    // 1. Visually slide the wrapper
     const translateValue = index * -100;
     swipeWrapperEl.style.transform = `translateX(${translateValue}vw)`;
 
-    // 2. Update Tab Buttons (Highlight the active tab)
     tabButtons.forEach(btn => {
         btn.classList.remove('active');
         if (parseInt(btn.dataset.index) === index) {
@@ -85,7 +221,6 @@ function switchPage(index) {
         }
     });
 
-    // 3. Render content for the active view
     const targetViewName = tabButtons[index].dataset.view;
     if (targetViewName === 'progress') {
         renderHistory();
@@ -100,19 +235,15 @@ function switchPage(index) {
 
 function handleTouchStart(e) {
     startX = e.touches[0].clientX;
-    swipeWrapperEl.style.transition = 'none'; // Disable transition during drag
+    swipeWrapperEl.style.transition = 'none'; 
 }
 
 function handleTouchMove(e) {
     const currentX = e.touches[0].clientX;
     const diff = currentX - startX;
     
-    // Only allow manual drag for the first three views (0, 1, 2)
     if (currentTabIndex < 3) {
-        // Calculate the current base offset in pixels
         const baseOffset = currentTabIndex * window.innerWidth;
-        
-        // Calculate the new drag position and set transform
         swipeWrapperEl.style.transform = `translateX(${(-baseOffset + diff)}px)`;
     }
 }
@@ -121,22 +252,18 @@ function handleTouchEnd(e) {
     const endX = e.changedTouches[0].clientX;
     const diff = endX - startX;
     
-    swipeWrapperEl.style.transition = 'transform 0.3s ease-out'; // Re-enable transition
+    swipeWrapperEl.style.transition = 'transform 0.3s ease-out'; 
 
     if (currentTabIndex >= 3) {
-        // If on the last (non-swipeable) page, snap back immediately
         switchPage(currentTabIndex);
         return;
     }
     
     if (diff > SWIPE_THRESHOLD && currentTabIndex > 0) {
-        // Swipe Right (Go Previous)
         switchPage(currentTabIndex - 1);
     } else if (diff < -SWIPE_THRESHOLD && currentTabIndex < 2) {
-        // Swipe Left (Go Next, only up to index 2 (Routines))
         switchPage(currentTabIndex + 1);
     } else {
-        // Not enough swipe, snap back to current page
         switchPage(currentTabIndex);
     }
 }
@@ -150,7 +277,7 @@ function addExercise() {
     if (!name) return;
 
     const newExercise = {
-        id: Date.now(),
+        id: Date.now() + Math.random(), 
         name: name,
         sets: [
             { setNumber: 1, weight: '', reps: '', completed: false }
@@ -247,40 +374,48 @@ function addSetToExercise(exerciseId) {
 
         exercise.sets.push({
             setNumber: newSetNumber,
-            weight: prevSet.weight, // Auto-fill weight
-            reps: prevSet.reps,     // Auto-fill reps
+            weight: prevSet.weight, 
+            reps: prevSet.reps,     
             completed: false
         });
         renderCurrentWorkout(); 
     }
 }
 
-// 4. Handles saving workout data to LocalStorage
-function finishAndSaveWorkout() {
+// 4. Handles saving workout data to IndexedDB
+async function finishAndSaveWorkout() {
     if (currentWorkout.exercises.length === 0) {
         alert("Cannot save an empty workout!");
         return;
     }
-
-    // 1. Update Personal Records before saving history
-    updatePersonalRecords(currentWorkout);
-
-    // 2. Save history
-    let history = JSON.parse(localStorage.getItem('gainslog_history') || '[]');
-    history.push(currentWorkout);
-    localStorage.setItem('gainslog_history', JSON.stringify(history));
-
-    // 3. Reset state
-    currentWorkout = {
-        date: new Date().toISOString().slice(0, 10),
-        exercises: []
-    };
-    alert(`Workout saved successfully!`);
-    renderCurrentWorkout(); 
     
-    // 4. Update UI views
-    renderHistory(); // Update Progress view
-    updateProfileStats(); // Update Profile view
+    // Set the date before saving
+    currentWorkout.date = new Date().toISOString().slice(0, 10);
+
+    try {
+        // 1. Update Personal Records (will save to IndexedDB)
+        await updatePersonalRecords(currentWorkout);
+
+        // 2. Save history to IndexedDB (ID will be assigned here)
+        await dbHelper.addWorkout(currentWorkout);
+
+        // 3. Reset state
+        currentWorkout = {
+            id: null,
+            date: new Date().toISOString().slice(0, 10),
+            exercises: []
+        };
+        
+        alert(`Workout saved successfully!`);
+        renderCurrentWorkout(); 
+        
+        // 4. Update UI views
+        renderHistory(); 
+        updateProfileStats(); 
+    } catch (error) {
+        console.error("Failed to save workout data to IndexedDB:", error);
+        alert("Error saving workout. See console for details.");
+    }
 }
 
 // 5. Handles Exercise Management (Delete/Edit)
@@ -305,47 +440,64 @@ function editExerciseName(exerciseId) {
 
 // --- PROGRESS / HISTORY / PR FUNCTIONS ---
 
-// Compares completed sets in the current workout to saved PRs
-function updatePersonalRecords(workout) {
+// Compares completed sets in the current workout to saved PRs and updates IndexedDB
+async function updatePersonalRecords(workout) {
     let updated = false;
+    let prsToSave = []; 
 
     workout.exercises.forEach(exercise => {
-        const nameKey = exercise.name.toUpperCase();
+        const nameKey = exercise.name.trim().toUpperCase();
         
         exercise.sets.filter(s => s.completed && s.weight && s.reps).forEach(set => {
             const setWeight = parseFloat(set.weight);
             const setReps = parseInt(set.reps);
 
-            // PRs are stored as an object { ExerciseName: { weight: X, date: Y } }
-            if (!personalRecords[nameKey] || setWeight > personalRecords[nameKey].weight) {
-                
+            const currentPR = personalRecords[nameKey];
+
+            if (!currentPR || setWeight > currentPR.weight) {
                 // New Weight PR
-                personalRecords[nameKey] = {
+                const newPR = {
+                    name: nameKey, 
                     weight: setWeight,
                     reps: setReps,
                     date: workout.date 
                 };
+                personalRecords[nameKey] = newPR;
+                prsToSave.push(newPR);
                 updated = true;
                 
-            } else if (setWeight === personalRecords[nameKey].weight && setReps > personalRecords[nameKey].reps) {
-                
+            } else if (setWeight === currentPR.weight && setReps > currentPR.reps) {
                 // Rep PR at the same maximum weight
-                personalRecords[nameKey].reps = setReps;
-                personalRecords[nameKey].date = workout.date;
+                const newPR = {
+                    name: nameKey,
+                    weight: setWeight,
+                    reps: setReps,
+                    date: workout.date 
+                };
+                personalRecords[nameKey] = newPR;
+                prsToSave.push(newPR);
                 updated = true;
             }
         });
     });
 
     if (updated) {
-        localStorage.setItem('gainslog_prs', JSON.stringify(personalRecords));
+        await Promise.all(prsToSave.map(pr => dbHelper.savePR(pr)));
     }
 }
 
-// 6. Loads and displays saved workouts (now used for the Progress tab)
-function renderHistory() {
-    const history = JSON.parse(localStorage.getItem('gainslog_history') || '[]');
+// 6. Loads and displays saved workouts from IndexedDB
+async function renderHistory() {
     historyContainerEl.innerHTML = '';
+    let history = [];
+    
+    try {
+        history = await dbHelper.getAllWorkouts();
+        
+    } catch (error) {
+        historyContainerEl.innerHTML = `<p class="placeholder-text error-text">Error loading workout history: ${error.message}</p>`;
+        return;
+    }
     
     if (history.length === 0) {
         historyContainerEl.innerHTML = '<p class="placeholder-text">No workouts saved yet. Finish a session to start tracking your progress.</p>';
@@ -357,17 +509,15 @@ function renderHistory() {
     prHeader.textContent = 'Personal Records (PRs)';
     historyContainerEl.appendChild(prHeader);
 
-    // Filter and sort PRs for display
     const prsArray = Object.keys(personalRecords)
         .map(key => ({ name: key, ...personalRecords[key] }))
-        .sort((a, b) => b.weight - a.weight); // Sort by heaviest weight
+        .sort((a, b) => b.weight - a.weight); 
     
     if (prsArray.length > 0) {
         prsArray.forEach(pr => {
             const prCard = document.createElement('div');
-            prCard.className = 'exercise-card pr-card'; // Use new class for styling
+            prCard.className = 'exercise-card pr-card'; 
             
-            // Format the date nicely
             const prDate = new Date(pr.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
             
             prCard.innerHTML = `
@@ -400,7 +550,6 @@ function renderHistory() {
         
         workout.exercises.forEach(exercise => {
             const exerciseSummary = document.createElement('div');
-            // Use the dark background for a clean line
             exerciseSummary.style.backgroundColor = 'var(--color-dark-bg)';
             exerciseSummary.style.padding = '8px';
             exerciseSummary.style.borderRadius = '4px';
@@ -422,7 +571,7 @@ function saveRestTimeSetting() {
 
     if (isNaN(newDuration) || newDuration < 30 || newDuration > 300) {
         alert("Please enter a rest time between 30 and 300 seconds (5 minutes).");
-        inputEl.value = userRestDuration; // Reset input to current valid value
+        inputEl.value = userRestDuration; 
         return;
     }
 
@@ -431,21 +580,70 @@ function saveRestTimeSetting() {
     alert(`Rest timer set to ${newDuration} seconds!`);
 }
 
-// NEW FUNCTION: Clear Data Logic
-function clearAllData() {
-    if (confirm("WARNING: This will permanently delete all saved workouts, routines, and PRs. Are you absolutely sure you want to proceed?")) {
-        localStorage.removeItem('gainslog_history');
-        localStorage.removeItem('gainslog_prs');
-        localStorage.removeItem('gainslog_routines');
-        localStorage.removeItem('gainslog_rest_duration');
-        
-        // Reset global state
-        routines = [];
-        personalRecords = {};
-        userRestDuration = DEFAULT_REST_DURATION;
-        currentWorkout.exercises = [];
-        
-        alert("All data successfully cleared. The app will now reload.");
+// NEW FUNCTION: Clear Data Logic (Uses Service Worker with dbHelper fallback)
+async function clearAllData() {
+    if (!confirm("WARNING: This will permanently delete all saved workouts, routines, and PRs. Are you absolutely sure you want to proceed?")) {
+        return;
+    }
+    
+    // 1. Clear LocalStorage items (Routines and Settings) immediately
+    localStorage.removeItem('gainslog_routines');
+    localStorage.removeItem('gainslog_rest_duration');
+    
+    // 2. Reset global state immediately
+    routines = [];
+    personalRecords = {}; 
+    userRestDuration = DEFAULT_REST_DURATION;
+    currentWorkout.exercises = [];
+    
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        try {
+            // Wait for the Service Worker to perform the heavy lifting (IndexedDB and Caches)
+            await new Promise((resolve, reject) => {
+                const sw = navigator.serviceWorker.controller;
+                
+                const messageHandler = (event) => {
+                    if (event.data.action === 'data_cleared') {
+                        navigator.serviceWorker.removeEventListener('message', messageHandler);
+                        resolve();
+                    } else if (event.data.action === 'clear_failed') {
+                        navigator.serviceWorker.removeEventListener('message', messageHandler);
+                        reject(new Error("Service Worker failed to clear all data."));
+                    }
+                };
+                
+                navigator.serviceWorker.addEventListener('message', messageHandler);
+                
+                // Send the clear message to the Service Worker
+                sw.postMessage({ action: 'clear_data' });
+
+                setTimeout(() => {
+                    navigator.serviceWorker.removeEventListener('message', messageHandler);
+                    reject(new Error("Service Worker message timed out."));
+                }, 5000); 
+            });
+
+            // 3. Success: All storage is cleared.
+            alert("All data successfully cleared. The app will now reload.");
+            window.location.reload();
+
+        } catch (error) {
+            // 4. Failure: If the SW method fails, fall back to manual IndexedDB clear
+            console.error("Service Worker cleanup failed, attempting manual IndexedDB clear:", error);
+            try {
+                // This call now works because dbHelper.clearAllData is in the class
+                await dbHelper.clearAllData(); 
+                alert("Data partially cleared, but Service Worker caches may remain. Reloading.");
+                window.location.reload();
+            } catch (manualError) {
+                 console.error("Manual IndexedDB clear also failed:", manualError);
+                 alert("Error: Data could not be reliably cleared. Please clear your browser's site data manually.");
+            }
+        }
+    } else {
+        // Fallback for no active Service Worker
+        await dbHelper.clearAllData(); 
+        alert("All data cleared via direct access. Reloading.");
         window.location.reload();
     }
 }
@@ -453,18 +651,15 @@ function clearAllData() {
 
 // 7. Update stats on the Profile/Settings tab
 function updateProfileStats() {
-    const history = JSON.parse(localStorage.getItem('gainslog_history') || '[]');
-    const totalWorkouts = history.length;
     const totalPRs = Object.keys(personalRecords).length;
 
-    // Custom content for the Profile view
     const profileView = document.getElementById('profile-view');
     profileView.innerHTML = `<h2>Profile & Settings</h2>`;
 
     profileView.innerHTML += `
         <div class="exercise-card" style="margin-top:20px; text-align:center;">
             <h3>User Stats</h3>
-            <p style="font-size:3em; color:var(--color-accent-cyan); margin:0;">${totalWorkouts}</p>
+            <p style="font-size:3em; color:var(--color-accent-cyan); margin:0;" id="total-workouts-stat">...</p>
             <p style="color:var(--color-text-dim);">Completed Sessions</p>
             
             <p style="font-size:2em; color:var(--color-accent-red); margin-top:15px;">${totalPRs}</p>
@@ -488,8 +683,16 @@ function updateProfileStats() {
         </div>
     `;
     
-    // Attach listener for the Clear Data Button (must be done after innerHTML is set)
     document.getElementById('clear-all-data-btn').addEventListener('click', clearAllData);
+    
+    dbHelper.getAllWorkouts().then(workouts => {
+        const totalWorkoutsStatEl = document.getElementById('total-workouts-stat');
+        if (totalWorkoutsStatEl) {
+            totalWorkoutsStatEl.textContent = workouts.length;
+        }
+    }).catch(err => {
+        console.error("Failed to load workout count for profile:", err);
+    });
 }
 
 
@@ -497,7 +700,6 @@ function updateProfileStats() {
 
 function startRestTimer() {
     clearInterval(timerInterval);
-    // Use the currently configured duration
     timeLeft = userRestDuration; 
     
     restTimerEl.classList.remove('timer-hidden');
@@ -529,7 +731,7 @@ function updateTimerDisplay() {
 function hideRestTimer() {
     clearInterval(timerInterval);
     restTimerEl.classList.add('timer-hidden');
-    timeLeft = userRestDuration; // Reset to the user's default
+    timeLeft = userRestDuration; 
     updateTimerDisplay();
 }
 
@@ -596,10 +798,8 @@ function loadRoutine(routineId) {
         }
     }
     
-    // Deep copy the routine exercises to the current workout session
     currentWorkout.exercises = JSON.parse(JSON.stringify(routine.exercises));
 
-    // Clear completion status and reset IDs for the new session
     currentWorkout.exercises.forEach(exercise => {
         exercise.id = Date.now() + Math.random();
         exercise.sets.forEach(set => {
@@ -610,7 +810,6 @@ function loadRoutine(routineId) {
     renderCurrentWorkout();
     alert(`Routine "${routine.name}" loaded!`);
 
-    // Switch to the current workout view
     document.querySelector('.tab-button[data-view="current"]').click();
 }
 
@@ -653,7 +852,6 @@ function addExerciseToTemplate() {
     const name = prompt("Enter Exercise Name for the template:");
     if (!name) return;
     
-    // Default template: 3 sets @ 100kg x 10 reps
     const newExerciseTemplate = {
         id: Date.now() + Math.random(), 
         name: name,
@@ -677,141 +875,146 @@ function closeRoutineEditor() {
 
 // --- EVENT LISTENERS AND INITIALIZATION ---
 
-document.addEventListener('DOMContentLoaded', () => {
-    
-    // 1. Tab switching 
-    tabButtons.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const index = parseInt(tab.getAttribute('data-index'));
-            switchPage(index);
+// New asynchronous initialization function
+async function initApp() {
+    try {
+        // 1. Open the database
+        await dbHelper.openDB();
+        
+        // 2. Load PRs from IndexedDB into the global state for comparison
+        const savedPRsArray = await dbHelper.getAllPRs();
+        savedPRsArray.forEach(pr => {
+            personalRecords[pr.name] = pr;
         });
-    });
 
-    // 2. Swipe/Touch Listeners
-    swipeWrapperEl.addEventListener('touchstart', handleTouchStart);
-    swipeWrapperEl.addEventListener('touchmove', handleTouchMove);
-    swipeWrapperEl.addEventListener('touchend', handleTouchEnd);
-    // Add a simple listener to prevent swiping on scrollable content
-    swipeWrapperEl.addEventListener('touchmove', (e) => {
-        if (e.target.closest('#workout-history-container') || e.target.closest('#routines-list-container')) {
-            // Allows scrolling within these elements to override horizontal swipe
-            return; 
-        }
-        e.preventDefault(); 
-    }, { passive: false });
-
-    // 3. Button Listeners
-    addExerciseBtn.addEventListener('click', addExercise);
-    finishWorkoutBtn.addEventListener('click', finishAndSaveWorkout);
-    skipTimerBtn.addEventListener('click', hideRestTimer);
-    addRoutineBtn.addEventListener('click', addRoutine);
-    
-    // 4. Routine Editor Buttons
-    addExerciseToRoutineBtn.addEventListener('click', addExerciseToTemplate);
-    closeEditorBtn.addEventListener('click', closeRoutineEditor);
-
-    // 5. Delegated Listener for Input changes
-    exerciseListEl.addEventListener('change', (e) => {
-        if (e.target.tagName === 'INPUT' && e.target.type === 'number') {
-            const input = e.target;
-            const cardEl = input.closest('.exercise-card');
-            // Use the data-exercise-id from the management button to reliably find the exercise
-            const exerciseId = parseInt(cardEl.querySelector('.management-btn').dataset.exerciseId);
-            const setNumber = parseInt(input.getAttribute('data-set-id'));
-            const field = input.getAttribute('data-field');
-
-            const exercise = currentWorkout.exercises.find(e => e.id === exerciseId);
-            if (exercise) {
-                const set = exercise.sets.find(s => s.setNumber === setNumber);
-                if (set) {
-                    set[field] = input.value;
-                }
-            }
-        }
-    });
-    
-    // 6. Delegated Listener for Set Completion (Tap-to-Track Logic)
-    exerciseListEl.addEventListener('click', (e) => {
-        if (e.target.classList.contains('set-status')) {
-            const statusEl = e.target;
-            const exerciseId = parseInt(statusEl.dataset.exerciseId);
-            const setNumber = parseInt(statusEl.dataset.setNumber);
-
-            const exercise = currentWorkout.exercises.find(e => e.id === exerciseId);
-            if (!exercise) return;
-            const set = exercise.sets.find(s => s.setNumber === setNumber);
-            if (!set) return;
-
-            set.completed = !set.completed;
-            statusEl.classList.toggle('completed', set.completed);
-            
-            // Ensure inputs are logged before any action
-            const setRow = statusEl.closest('.set-row');
-            const weightInput = setRow.querySelector('input[data-field="weight"]');
-            const repsInput = setRow.querySelector('input[data-field="reps"]');
-
-            if (set.completed) {
-                const prevSet = exercise.sets.find(s => s.setNumber === setNumber - 1);
-                
-                // Auto-Fill Logic
-                if (!weightInput.value && prevSet) {
-                    weightInput.value = prevSet.weight;
-                }
-                if (!repsInput.value && prevSet) {
-                    repsInput.value = prevSet.reps;
-                }
-
-                // Log Data immediately after auto-fill
-                set.weight = weightInput.value;
-                set.reps = repsInput.value;
-                
-                // Auto-Advance
-                if (set.setNumber === exercise.sets.length) {
-                    addSetToExercise(exercise.id);
-                }
-                
-                // Start Timer
-                startRestTimer();
-
-            } else {
-                // If uncompleted, clear data and stop timer
-                set.weight = '';
-                set.reps = '';
-                hideRestTimer(); 
-            }
-        }
-    });
-    
-    // 7. Delegated Listener for Management Menu Toggle
-    exerciseListEl.addEventListener('click', (e) => {
-        if (e.target.classList.contains('management-btn')) {
-            const exerciseId = e.target.dataset.exerciseId;
-            // Hide all other menus
-            document.querySelectorAll('.management-menu').forEach(menu => {
-                if(menu.id !== `menu-${exerciseId}`) menu.classList.add('hidden');
+        // 3. Tab switching 
+        tabButtons.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const index = parseInt(tab.getAttribute('data-index'));
+                switchPage(index);
             });
-            // Toggle the target menu
-            const menuEl = document.getElementById(`menu-${exerciseId}`);
-            menuEl.classList.toggle('hidden');
-        }
-    });
-    
-    // 8. Delegated Listener for deleting template exercises
-    routineEditorList.addEventListener('click', (e) => {
-        if (e.target.classList.contains('delete-btn')) {
-            const exerciseTemplateId = parseFloat(e.target.dataset.exerciseId);
-            const routine = routines.find(r => r.id === editingRoutineId);
+        });
 
-            if (routine && confirm("Remove this exercise from the routine template?")) {
-                routine.exercises = routine.exercises.filter(e => e.id !== exerciseTemplateId);
-                saveRoutines();
-                renderRoutineEditorList(routine);
+        // 4. Swipe/Touch Listeners
+        swipeWrapperEl.addEventListener('touchstart', handleTouchStart);
+        swipeWrapperEl.addEventListener('touchmove', handleTouchMove);
+        swipeWrapperEl.addEventListener('touchend', handleTouchEnd);
+        swipeWrapperEl.addEventListener('touchmove', (e) => {
+            if (e.target.closest('#workout-history-container') || e.target.closest('#routines-list-container')) {
+                return; 
             }
-        }
-    });
+            e.preventDefault(); 
+        }, { passive: false });
 
+        // 5. Button Listeners
+        addExerciseBtn.addEventListener('click', addExercise);
+        finishWorkoutBtn.addEventListener('click', finishAndSaveWorkout);
+        skipTimerBtn.addEventListener('click', hideRestTimer);
+        addRoutineBtn.addEventListener('click', addRoutine);
+        
+        // 6. Routine Editor Buttons
+        addExerciseToRoutineBtn.addEventListener('click', addExerciseToTemplate);
+        closeEditorBtn.addEventListener('click', closeRoutineEditor);
 
-    // Initial render when the app loads
-    switchPage(0); // Start on the Training (index 0) page
-    updateProfileStats();
-});
+        // 7. Delegated Listener for Input changes
+        exerciseListEl.addEventListener('change', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.type === 'number') {
+                const input = e.target;
+                const cardEl = input.closest('.exercise-card');
+                const exerciseId = parseFloat(cardEl.querySelector('.management-btn').dataset.exerciseId);
+                const setNumber = parseInt(input.getAttribute('data-set-id'));
+                const field = input.getAttribute('data-field');
+
+                const exercise = currentWorkout.exercises.find(e => e.id === exerciseId);
+                if (exercise) {
+                    const set = exercise.sets.find(s => s.setNumber === setNumber);
+                    if (set) {
+                        set[field] = input.value;
+                    }
+                }
+            }
+        });
+        
+        // 8. Delegated Listener for Set Completion (Tap-to-Track Logic)
+        exerciseListEl.addEventListener('click', (e) => {
+            if (e.target.classList.contains('set-status')) {
+                const statusEl = e.target;
+                const exerciseId = parseFloat(statusEl.dataset.exerciseId);
+                const setNumber = parseInt(statusEl.dataset.setNumber);
+
+                const exercise = currentWorkout.exercises.find(e => e.id === exerciseId);
+                if (!exercise) return;
+                const set = exercise.sets.find(s => s.setNumber === setNumber);
+                if (!set) return;
+
+                set.completed = !set.completed;
+                statusEl.classList.toggle('completed', set.completed);
+                
+                const setRow = statusEl.closest('.set-row');
+                const weightInput = setRow.querySelector('input[data-field="weight"]');
+                const repsInput = setRow.querySelector('input[data-field="reps"]');
+
+                if (set.completed) {
+                    const prevSet = exercise.sets.find(s => s.setNumber === setNumber - 1);
+                    
+                    if (!weightInput.value && prevSet) {
+                        weightInput.value = prevSet.weight;
+                    }
+                    if (!repsInput.value && prevSet) {
+                        repsInput.value = prevSet.reps;
+                    }
+
+                    set.weight = weightInput.value;
+                    set.reps = repsInput.value;
+                    
+                    if (set.setNumber === exercise.sets.length) {
+                        addSetToExercise(exercise.id);
+                    }
+                    
+                    startRestTimer();
+
+                } else {
+                    set.weight = '';
+                    set.reps = '';
+                    hideRestTimer(); 
+                }
+            }
+        });
+        
+        // 9. Delegated Listener for Management Menu Toggle
+        exerciseListEl.addEventListener('click', (e) => {
+            if (e.target.classList.contains('management-btn')) {
+                const exerciseId = e.target.dataset.exerciseId;
+                document.querySelectorAll('.management-menu').forEach(menu => {
+                    if(menu.id !== `menu-${exerciseId}`) menu.classList.add('hidden');
+                });
+                const menuEl = document.getElementById(`menu-${exerciseId}`);
+                menuEl.classList.toggle('hidden');
+            }
+        });
+        
+        // 10. Delegated Listener for deleting template exercises
+        routineEditorList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-btn')) {
+                const exerciseTemplateId = parseFloat(e.target.dataset.exerciseId);
+                const routine = routines.find(r => r.id === editingRoutineId);
+
+                if (routine && confirm("Remove this exercise from the routine template?")) {
+                    routine.exercises = routine.exercises.filter(e => e.id !== exerciseTemplateId);
+                    saveRoutines();
+                    renderRoutineEditorList(routine);
+                }
+            }
+        });
+
+        // 11. Initial render when the app loads
+        switchPage(0); 
+        updateProfileStats();
+        
+    } catch (error) {
+        console.error("Fatal Error during app initialization:", error);
+        alert("The app failed to load its data storage. Please check your browser's console.");
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initApp);
