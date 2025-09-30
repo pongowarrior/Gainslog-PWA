@@ -6,6 +6,7 @@
     <title>GAINS-LOG Workout Tracker</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,69 +18,64 @@
     <main id="app-container">
         
         <nav class="tabs">
-            <button class="tab-button active" data-view="current">🏋️ Training</button>
-            <button class="tab-button" data-view="progress">📈 Progress</button>
-            <button class="tab-button" data-view="routines">📚 Routines</button>
-            <button class="tab-button" data-view="profile">👤 Profile</button>
+            <button class="tab-button active" data-view="current" data-index="0">
+                <i class="fa-solid fa-dumbbell"></i><br>Training
+            </button>
+            <button class="tab-button" data-view="progress" data-index="1">
+                <i class="fa-solid fa-chart-line"></i><br>Progress
+            </button>
+            <button class="tab-button" data-view="routines" data-index="2">
+                <i class="fa-solid fa-book"></i><br>Routines
+            </button>
+            <button class="tab-button" data-view="profile" data-index="3">
+                <i class="fa-solid fa-user"></i><br>Profile
+            </button>
         </nav>
-
-        <section id="current-workout-view" class="view active">
-            <h2>Current Session</h2>
+        
+        <div id="swipe-wrapper">
             
-            <div id="rest-timer" class="timer-hidden">
-                <p>REST: <span id="timer-display">1:30</span></p>
-                <button id="skip-timer-btn" class="secondary-btn">Skip</button>
-            </div>
+            <section id="current-workout-view" class="view page" data-index="0">
+                <div id="rest-timer" class="timer-hidden">
+                    <p>Rest Time: <span id="timer-display">1:30</span></p>
+                    <button id="skip-timer-btn" class="secondary-btn">Skip</button>
+                </div>
+                
+                <div id="exercise-list">
+                    </div>
+                
+                <button id="add-exercise-btn" class="secondary-btn">+ Add Exercise</button>
+                <button id="finish-workout-btn" class="primary-btn hidden">Finish & Save Workout</button>
+            </section>
             
-            <div id="exercise-list">
-                <p class="placeholder-text">Start a new session or load a Routine.</p>
-            </div>
+            <section id="progress-view" class="view page hidden" data-index="1">
+                <div id="workout-history-container">
+                    </div>
+            </section>
 
-            <button id="add-exercise-btn" class="primary-btn">Add New Exercise</button>
-            <button id="finish-workout-btn" class="primary-btn finish-btn hidden">Finish & Save Workout</button>
-        </section>
-        
-        <section id="progress-view" class="view hidden">
-            <h2>Your Performance</h2>
-            <p class="placeholder-text">This will eventually contain charts and personal records (PRs) like the image.</p>
-            <div id="workout-history-container"></div>
-        </section>
-
-        <section id="routines-view" class="view hidden">
-            <h2>Workout Programs</h2>
-            <div id="routines-list-container">
-                <p class="placeholder-text">Define recurring workouts here.</p>
-            </div>
-            <button id="add-routine-btn" class="primary-btn">Create New Routine</button>
-        </section>
-        
-        <section id="profile-view" class="view hidden">
-            <h2>Profile & Settings</h2>
-            <p class="placeholder-text">Access personal stats, settings, and data management here.</p>
-            <div class="exercise-card" style="margin-top:20px;">
-                <h3>Total Workouts: <span id="total-workouts-count">0</span></h3>
-                <p style="color:var(--color-text-dim);">The number will update after you save your first workout.</p>
-            </div>
-        </section>
-
-        
-        <section id="routine-editor-view" class="view hidden">
+            <section id="routines-view" class="view page hidden" data-index="2">
+                <h2>Workout Programs</h2>
+                <div id="routines-list-container">
+                    </div>
+                <button id="add-routine-btn" class="primary-btn">Create New Routine</button>
+            </section>
+            
+            <section id="profile-view" class="view hidden" data-index="3">
+                </section>
+            
+        </div> <section id="routine-editor-view" class="view hidden">
             <div class="editor-header">
-                <h2 id="routine-editor-title">Editing Routine: </h2>
-                <button id="close-editor-btn" class="secondary-btn">Done</button>
+                <h2 id="routine-editor-title" style="margin:0;">Editing Routine</h2>
+                <button id="close-editor-btn">Done</button>
             </div>
             
-            <p style="color:var(--color-text-dim); margin-bottom: 15px;">Add/remove exercises for this program template.</p>
-
             <div id="routine-editor-list">
                 </div>
             
-            <button id="add-exercise-to-routine-btn" class="primary-btn" style="margin-top: 25px;">+ Add Exercise to Template</button>
+            <button id="add-exercise-to-routine-btn" class="secondary-btn">+ Add Exercise to Template</button>
         </section>
 
     </main>
 
     <script src="app.js"></script>
-    <script src="service-worker.js"></script>
 </body>
 </html>

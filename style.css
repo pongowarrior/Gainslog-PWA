@@ -1,4 +1,4 @@
-/* GAINS-LOG: PREMIUM UI REDESIGN (Inspired by user images) */
+/* GAINS-LOG: PREMIUM UI REDESIGN (Final Version) */
 
 :root {
     /* Color Palette: Deep Blue/Black with Neon Accents */
@@ -50,19 +50,43 @@ h2 {
     color: var(--color-text-light);
 }
 
+/* --- MULTI-PAGE & SWIPE LAYOUT STYLES --- */
+
 #app-container {
-    padding: 15px; 
+    padding: 0; /* Handled by the views now */
     max-width: 600px;
     margin: 0 auto;
+    overflow: hidden; /* Important: Hide horizontal overflow */
 }
 
-/* Tabs (Bottom Navigation Bar Look) */
+#swipe-wrapper {
+    /* Holds all swipeable pages side-by-side */
+    display: flex;
+    width: 400%; /* 4 pages wide */
+    transition: transform 0.3s ease-out; /* Smooth slide animation */
+}
+
+.view {
+    /* Base view styles */
+    width: 100%; /* Each view takes up the full width of the visible screen */
+    flex-shrink: 0; /* Prevents pages from shrinking */
+    padding: 0 15px; /* Add internal padding back to the view itself */
+    box-sizing: border-box;
+}
+
+/* Override the default .hidden class for the swipeable pages */
+.view.page {
+    display: block !important; 
+}
+
+
+/* Tabs (Bottom Navigation Bar Look with Icons) */
 .tabs {
     display: flex;
     justify-content: space-around;
     background-color: var(--color-medium-bg);
     border-radius: 12px;
-    margin-bottom: 20px;
+    margin: 15px; /* Add margin around the tab bar */
     padding: 10px 5px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--color-card-border);
@@ -74,17 +98,26 @@ h2 {
     border: none;
     background: transparent;
     color: var(--color-text-dim);
-    font-size: 0.9em;
+    font-size: 0.8em; 
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
     border-radius: 6px;
+    /* Center and stack icon/text */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tab-button i {
+    /* Style for the icon itself */
+    font-size: 1.3em;
+    margin-bottom: 3px; 
 }
 
 .tab-button.active {
-    color: var(--color-accent-cyan); /* Neon glow effect */
+    color: var(--color-accent-cyan); 
     font-weight: bold;
-    /* Optional: Add a subtle highlight line or box */
     border-bottom: 2px solid var(--color-accent-cyan);
 }
 
@@ -271,6 +304,12 @@ h2 {
     padding: 15px;
     border-radius: 8px;
     margin-bottom: 10px;
+    border-left: 5px solid var(--color-text-dim); /* Subtle left indicator */
+    transition: border-left-color 0.2s;
+}
+
+.routine-template-exercise:hover {
+    border-left-color: var(--color-accent-cyan);
 }
 
 .routine-template-exercise span {
@@ -279,25 +318,140 @@ h2 {
     flex-grow: 1;
 }
 
-/* Routine Editor Modal */
+
+/* ROUTINE EDITOR MODAL STYLES */
 #routine-editor-view {
     position: fixed; 
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--color-dark-bg);
+    /* Use a slightly different background to show depth */
+    background-color: rgba(12, 21, 39, 0.95); /* Deep Navy with slight transparency */
     z-index: 200; 
     padding: 20px;
     box-sizing: border-box;
     overflow-y: auto;
+    /* Add a subtle animation when it appears */
+    animation: fadeIn 0.3s ease-in-out; 
+}
+
+/* Keyframe animation for a smooth transition */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .editor-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    border-bottom: 2px solid var(--color-accent-red); /* Highlight the header */
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+/* Style the "Done" button to look like a clean action */
+#close-editor-btn {
+    background-color: transparent;
+    border: 2px solid var(--color-accent-cyan);
+    color: var(--color-accent-cyan);
+    font-weight: bold;
+    padding: 8px 15px;
+    margin-top: 0;
+}
+
+.routine-template-exercise .delete-btn {
+    background-color: #5C1E26; /* Darker red shade */
+    color: var(--color-text-light);
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    border: none;
+    cursor: pointer;
+}
+
+
+/* --- PERSONAL RECORD (PR) STYLES --- */
+.pr-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 15px;
+    border-left: 5px solid var(--color-accent-cyan); /* Neon indicator */
+}
+
+.pr-name {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: var(--color-text-light);
+    text-transform: capitalize;
+    flex-grow: 1;
+}
+
+.pr-details {
+    text-align: right;
+    font-size: 0.9em;
+}
+
+.pr-weight {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: var(--color-accent-red); /* Highlight the weight */
+    display: block;
+    line-height: 1;
+}
+
+.pr-reps {
+    color: var(--color-text-dim);
+    display: block;
+    margin-top: 3px;
+}
+
+.pr-date {
+    color: var(--color-text-dim);
+    font-size: 0.75em;
+    display: block;
+    margin-top: 2px;
+}
+
+
+/* --- PROFILE/SETTINGS STYLES --- */
+.setting-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-card-border);
+}
+
+.setting-group label {
+    color: var(--color-text-light);
+    font-size: 1em;
+    flex-grow: 1;
+}
+
+#rest-duration-input {
+    width: 80px;
+    padding: 8px;
+    border: 1px solid var(--color-card-border);
+    border-radius: 4px;
+    background-color: #151F33; 
+    color: var(--color-accent-cyan);
+    font-size: 1em;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Style for the large delete button */
+.delete-btn-large {
+    background-image: linear-gradient(90deg, #A80000, #CC2D24);
+    box-shadow: 0 4px 10px rgba(168, 0, 0, 0.4);
+    margin-top: 20px !important;
+}
+
+.delete-btn-large:active {
+    background-color: #8C0000;
 }
 
 /* Utility */
