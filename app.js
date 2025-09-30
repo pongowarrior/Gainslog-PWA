@@ -35,8 +35,10 @@ const restTimerEl = document.getElementById('rest-timer');
 const timerDisplayEl = document.getElementById('timer-display');
 const skipTimerBtn = document.getElementById('skip-timer-btn');
 
-// Element references (History View)
+// Element references (Progress View - now houses history)
 const historyContainerEl = document.getElementById('workout-history-container');
+const totalWorkoutsCountEl = document.getElementById('total-workouts-count');
+
 
 // Element references (Routines View)
 const routinesListEl = document.getElementById('routines-list-container');
@@ -71,12 +73,12 @@ function addExercise() {
 }
 
 
-// 2. Generates the HTML for the Current Session (Including Edit/Delete)
+// 2. Generates the HTML for the Current Session 
 function renderCurrentWorkout() {
     exerciseListEl.innerHTML = ''; 
 
     if (currentWorkout.exercises.length === 0) {
-        exerciseListEl.innerHTML = '<p class="placeholder-text">Click "Add New Exercise" or load a Routine to start your session.</p>';
+        exerciseListEl.innerHTML = '<p class="placeholder-text">Start a new session or load a Routine.</p>';
         finishWorkoutBtn.classList.add('hidden');
         return;
     }
@@ -101,10 +103,10 @@ function renderCurrentWorkout() {
             const setRow = document.createElement('div');
             setRow.className = 'set-row';
             
-            // 1. Set Number (15% width)
+            // 1. Set Number 
             setRow.innerHTML += `<span class="set-number">${set.setNumber}</span>`;
             
-            // 2. Weight Input Group (35% width)
+            // 2. Weight Input Group 
             setRow.innerHTML += `
                 <div class="input-group">
                     <span class="input-label">Weight (kg)</span>
@@ -112,7 +114,7 @@ function renderCurrentWorkout() {
                            value="${set.weight}" placeholder="100" inputmode="decimal">
                 </div>`;
             
-            // 3. Reps Input Group (35% width)
+            // 3. Reps Input Group 
             setRow.innerHTML += `
                 <div class="input-group">
                     <span class="input-label">Reps</span>
@@ -120,7 +122,7 @@ function renderCurrentWorkout() {
                            value="${set.reps}" placeholder="10" inputmode="numeric">
                 </div>`;
             
-            // 4. Completion Circle (15% width)
+            // 4. Completion Circle 
             const statusEl = document.createElement('div');
             statusEl.className = set.completed ? 'set-status completed' : 'set-status';
             statusEl.dataset.exerciseId = exercise.id;
@@ -178,9 +180,10 @@ function finishAndSaveWorkout() {
         date: new Date().toISOString().slice(0, 10),
         exercises: []
     };
-    alert(`Workout saved successfully for ${history.length} total sessions!`);
+    alert(`Workout saved successfully!`);
     renderCurrentWorkout(); 
-    renderHistory();
+    renderHistory(); // Update Progress view
+    updateProfileStats(); // Update Profile view
 }
 
 // 5. Handles Exercise Management (Delete/Edit)
@@ -203,9 +206,9 @@ function editExerciseName(exerciseId) {
 }
 
 
-// --- HISTORY FUNCTIONS ---
+// --- PROGRESS/HISTORY FUNCTIONS ---
 
-// 6. Loads and displays saved workouts
+// 6. Loads and displays saved workouts (used for the new Progress tab)
 function renderHistory() {
     const history = JSON.parse(localStorage.getItem('gainslog_history') || '[]');
     historyContainerEl.innerHTML = '';
@@ -247,6 +250,14 @@ function renderHistory() {
 
         historyContainerEl.appendChild(historyCard);
     });
+}
+
+// 7. Update stats on the Profile/Settings tab
+function updateProfileStats() {
+    const history = JSON.parse(localStorage.getItem('gainslog_history') || '[]');
+    if (totalWorkoutsCountEl) {
+        totalWorkoutsCountEl.textContent = history.length;
+    }
 }
 
 
@@ -455,15 +466,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetView) {
                 targetView.classList.remove('hidden');
                 
-                // Render content when tabs are switched
-                if (tab.getAttribute('data-view') === 'history') {
-                    renderHistory();
+                // Render content based on the active tab
+                const viewName = tab.getAttribute('data-view');
+                if (viewName === 'progress') {
+                    renderHistory(); // Progress tab shows history
                 } 
-                if (tab.getAttribute('data-view') === 'routines') {
+                if (viewName === 'routines') {
                     renderRoutines();
                 }
+                if (viewName === 'profile') {
+                    updateProfileStats();
+                }
                 // FIX: Force re-render of the Current Workout view when returning to it
-                if (tab.getAttribute('data-view') === 'current') {
+                if (viewName === 'current') {
                     renderCurrentWorkout(); 
                 }
             }
@@ -581,4 +596,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial render when the app loads
     renderCurrentWorkout();
+    updateProfileStats();
 });

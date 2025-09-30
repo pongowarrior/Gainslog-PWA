@@ -1,13 +1,16 @@
-/* GAINS-LOG: PROFESSIONAL UI REDESIGN */
+/* GAINS-LOG: PREMIUM UI REDESIGN (Inspired by user images) */
 
 :root {
-    --color-dark-bg: #1A1A1A;     /* Deep Black/Dark Grey */
-    --color-medium-bg: #2C2C2C;   /* Secondary Dark Panel */
-    --color-accent: #FF3B30;      /* Aggressive Red/Crimson */
+    /* Color Palette: Deep Blue/Black with Neon Accents */
+    --color-dark-bg: #0C1527;     /* Deep Navy Blue/Black */
+    --color-medium-bg: #1A243A;   /* Card/Panel Background */
+    --color-card-border: #2B3D5E; /* Subtle Card Divider */
+    --color-accent-red: #FF3B30;  /* Bright Red/Crimson Accent */
+    --color-accent-cyan: #00FFFF; /* Neon Cyan for Progress/Stats */
     --color-text-light: #F0F0F0;  /* High Contrast White Text */
-    --color-text-dim: #999999;    /* Subdued Text */
+    --color-text-dim: #99AABF;    /* Subdued/Muted Text */
     --color-success: #2ECC71;     /* Green for completion/success */
-    --font-family: 'Arial', sans-serif;
+    --font-family: 'Inter', 'Arial', sans-serif;
 }
 
 body {
@@ -18,16 +21,15 @@ body {
     padding: 0;
     line-height: 1.6;
     touch-action: manipulation;
-    /* Prevents horizontal scrolling */
     overflow-x: hidden; 
 }
 
 /* Header & Typography */
 header {
-    background-color: var(--color-medium-bg);
+    background-color: var(--color-dark-bg);
     padding: 20px 0;
     text-align: center;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -36,13 +38,12 @@ header {
 h1 {
     margin: 0;
     font-size: 2.2em;
-    color: var(--color-accent);
+    color: var(--color-accent-red);
     letter-spacing: 2px;
 }
 
 h2 {
     font-size: 1.5em;
-    border-bottom: 2px solid var(--color-accent);
     padding-bottom: 5px;
     margin-top: 25px;
     margin-bottom: 15px;
@@ -55,63 +56,65 @@ h2 {
     margin: 0 auto;
 }
 
-/* Tabs */
+/* Tabs (Bottom Navigation Bar Look) */
 .tabs {
     display: flex;
     justify-content: space-around;
     background-color: var(--color-medium-bg);
-    border-radius: 8px;
+    border-radius: 12px;
     margin-bottom: 20px;
-    padding: 5px;
+    padding: 10px 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--color-card-border);
 }
 
 .tab-button {
     flex-grow: 1;
-    padding: 12px 0;
+    padding: 8px 0;
     border: none;
     background: transparent;
     color: var(--color-text-dim);
-    font-size: 1em;
+    font-size: 0.9em;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
     border-radius: 6px;
 }
 
 .tab-button.active {
-    background-color: var(--color-accent);
-    color: var(--color-text-light);
+    color: var(--color-accent-cyan); /* Neon glow effect */
     font-weight: bold;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+    /* Optional: Add a subtle highlight line or box */
+    border-bottom: 2px solid var(--color-accent-cyan);
 }
 
-/* Primary Buttons (with 3D press effect) */
+/* Primary Buttons */
 .primary-btn {
     width: 100%;
     padding: 15px;
-    background-color: var(--color-accent);
+    background-image: linear-gradient(90deg, #FF3B30, #CC2D24);
     color: var(--color-text-light);
     border: none;
     border-radius: 8px;
     font-size: 1.1em;
     font-weight: bold;
     cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s, box-shadow 0.2s;
+    transition: all 0.2s;
     margin-top: 15px;
-    box-shadow: 0 4px 0 #CC2D24; 
+    box-shadow: 0 4px 10px rgba(255, 59, 48, 0.4); 
 }
 
 .primary-btn:active {
-    background-color: #CC2D24; 
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #CC2D24; 
+    transform: translateY(1px);
+    box-shadow: 0 2px 5px rgba(255, 59, 48, 0.4);
 }
 
-/* Secondary Button (Skip Rest / Small Action) */
+/* Secondary Button */
 .secondary-btn {
-    background-color: var(--color-medium-bg);
+    background-color: var(--color-card-border);
     color: var(--color-text-light);
     border: none;
-    padding: 8px 15px;
+    padding: 10px 18px;
     border-radius: 6px;
     margin-top: 10px;
     font-size: 0.9em;
@@ -119,56 +122,47 @@ h2 {
     transition: background-color 0.1s;
 }
 
-.secondary-btn:active {
-    background-color: #555;
+.secondary-btn:hover {
+    background-color: #3f5577;
 }
 
 
-/* Exercise Card Design */
+/* Exercise Card Design (Clean Card Look) */
 .exercise-card {
     background-color: var(--color-medium-bg);
-    border-radius: 10px;
+    border-radius: 12px;
     padding: 15px;
-    margin-bottom: 20px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-    border-left: 5px solid var(--color-accent);
+    margin-bottom: 15px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--color-card-border);
 }
 
 .exercise-card h3 {
-    color: var(--color-accent);
+    color: var(--color-text-light);
     margin-top: 0;
     margin-bottom: 15px;
-    font-size: 1.4em;
+    font-size: 1.3em;
+    font-weight: 600;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-left: 3px solid var(--color-accent-red);
+    padding-left: 10px;
 }
 
-/* Set Row Layout (Responsive) */
+/* Set Row Layout */
 .set-row {
     display: flex;
     justify-content: space-between; 
     align-items: center;
     background-color: var(--color-dark-bg);
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    transition: background-color 0.1s;
-    cursor: pointer;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    border: 1px solid #23314B;
 }
 
-.set-row:active {
-    background-color: #404040;
-}
-
-.set-row .set-number {
-    font-weight: bold;
-    color: var(--color-accent);
-    text-align: center;
-    flex-basis: 15%; 
-}
-
-/* Input Group: Stacked label and input */
+/* Inputs and Labels */
 .input-group {
     display: flex;
     flex-direction: column; 
@@ -179,67 +173,84 @@ h2 {
 
 .set-row input {
     width: 100%; 
-    padding: 8px;
-    border: 1px solid var(--color-medium-bg);
+    padding: 8px 5px;
+    border: 1px solid var(--color-card-border);
     border-radius: 4px;
-    background-color: #383838;
+    background-color: #151F33; /* Slightly darker input field */
     color: var(--color-text-light);
     font-size: 1em;
     text-align: center;
     box-sizing: border-box;
+    font-weight: bold;
 }
 
 .set-row input:focus {
     outline: none;
-    border-color: var(--color-accent);
+    border-color: var(--color-accent-red);
+    box-shadow: 0 0 5px rgba(255, 59, 48, 0.5);
 }
 
 .set-row .input-label {
     color: var(--color-text-dim);
-    font-size: 0.8em;
+    font-size: 0.75em;
     margin-bottom: 4px;
     text-transform: uppercase;
 }
 
-/* SET COMPLETION CIRCLE (Large Target) */
+.set-row .set-number {
+    font-weight: bold;
+    color: var(--color-accent-cyan);
+    text-align: center;
+    flex-basis: 15%; 
+}
+
+
+/* SET COMPLETION CIRCLE */
 .set-status {
     width: 38px;
     height: 38px;
     border: 2px solid var(--color-text-dim);
     border-radius: 50%;
     cursor: pointer;
-    transition: background-color 0.2s, border-color 0.2s;
+    transition: all 0.2s;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .set-status.completed {
     background-color: var(--color-success);
     border-color: var(--color-success);
+    box-shadow: 0 0 10px rgba(46, 204, 113, 0.7);
 }
 
-/* TIMER STYLES */
+
+/* TIMER STYLES (Floating/Fixed Bar Look) */
 #rest-timer {
-    background-color: var(--color-accent); 
+    background-color: var(--color-accent-cyan); 
     color: var(--color-dark-bg);
     padding: 15px 20px;
-    border-radius: 10px;
+    border-radius: 8px;
     text-align: center;
     font-weight: bold;
     margin-bottom: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 15px rgba(0, 255, 255, 0.4);
     transition: all 0.3s ease-in-out;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 #rest-timer p {
     margin: 0;
-    font-size: 1.2em;
+    font-size: 1.1em;
     display: flex;
-    justify-content: center;
     align-items: center;
 }
 
 #timer-display {
-    font-size: 2.5em; 
+    font-size: 1.8em; 
     margin-left: 10px;
     color: var(--color-dark-bg); 
     line-height: 1;
@@ -251,42 +262,24 @@ h2 {
 }
 
 
-/* Exercise Management Styles */
-.management-btn {
-    background: transparent;
-    color: var(--color-text-dim);
-    border: none;
-    font-size: 1.5em;
-    cursor: pointer;
-    padding: 0 5px;
-}
-
-.management-menu {
+/* Routine/History Card Specifics */
+.routine-template-exercise {
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #151F33; 
+    padding: 15px;
+    border-radius: 8px;
     margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--color-dark-bg);
 }
 
-.management-menu button {
-    background-color: var(--color-medium-bg);
+.routine-template-exercise span {
+    font-weight: bold;
     color: var(--color-text-light);
-    border: 1px solid var(--color-text-dim);
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.1s;
+    flex-grow: 1;
 }
 
-.management-menu .delete-btn {
-    background-color: #A03030; 
-    border-color: #A03030;
-    color: var(--color-text-light);
-}
-
-/* ROUTINE EDITOR MODAL STYLES */
+/* Routine Editor Modal */
 #routine-editor-view {
     position: fixed; 
     top: 0;
@@ -304,32 +297,8 @@ h2 {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: none;
-    padding-bottom: 0;
+    margin-bottom: 20px;
 }
-
-#routine-editor-view h2 {
-    margin-top: 0;
-    flex-grow: 1;
-    border-bottom: none;
-}
-
-.routine-template-exercise {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background-color: var(--color-medium-bg);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-}
-
-.routine-template-exercise span {
-    font-weight: bold;
-    color: var(--color-text-light);
-    flex-grow: 1;
-}
-
 
 /* Utility */
 .hidden {
@@ -341,4 +310,7 @@ h2 {
     text-align: center;
     padding: 40px 0;
     font-style: italic;
+    border: 1px dashed var(--color-card-border);
+    border-radius: 8px;
+    margin: 20px 0;
 }
